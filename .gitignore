@@ -1,0 +1,8 @@
+# Private / local-only
+private/
+
+# Common junk
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
