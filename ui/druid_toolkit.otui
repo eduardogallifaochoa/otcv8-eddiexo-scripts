@@ -1,0 +1,613 @@
+DruidToolkitSetupWindow < MainWindow
+  id: dtSetupWindow
+  !text: tr('Druid Toolkit')
+  size: 650 420
+  padding: 12
+  draggable: true
+  @onEscape: self:hide()
+
+  Panel
+    id: bg
+    anchors.fill: parent
+    image-source: /images/ui/window
+    opacity: 0.95
+
+  Panel
+    id: tint
+    anchors.fill: parent
+    background-color: #00000077
+
+  Panel
+    id: content
+    anchors.fill: parent
+    padding: 10
+
+    Label
+      id: header
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 20
+      text-align: center
+      text: [Setup]
+      font: verdana-11px-rounded
+      color: #ffaa00
+
+    HorizontalSeparator
+      id: sepTop
+      anchors.top: header.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+
+    Panel
+      id: pages
+      anchors.top: sepTop.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: sepBottom.top
+      margin-top: 10
+      margin-bottom: 10
+
+      Panel
+        id: pageMenu
+        anchors.fill: parent
+
+        Label
+          id: menuLeftTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 300
+          text-align: center
+          text: Fine Tuning
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Label
+          id: menuRightTitle
+          anchors.top: parent.top
+          anchors.right: parent.right
+          width: 300
+          text-align: center
+          text: General
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Panel
+          id: menuLeft
+          anchors.top: menuLeftTitle.bottom
+          anchors.left: parent.left
+          anchors.bottom: parent.bottom
+          width: 300
+          margin-top: 12
+          layout:
+            type: verticalBox
+            fit-children: true
+            spacing: 10
+
+          Button
+            id: btnHotkeys
+            height: 34
+            text: Hotkeys
+
+          Button
+            id: btnIcons
+            height: 34
+            text: Icons Hotkeys
+
+        Panel
+          id: menuRight
+          anchors.top: menuRightTitle.bottom
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          width: 300
+          margin-top: 12
+          layout:
+            type: verticalBox
+            fit-children: true
+            spacing: 10
+
+          Button
+            id: btnGeneral
+            height: 34
+            text: General
+
+          Button
+            id: btnSpells
+            height: 34
+            text: Spells
+
+      Panel
+        id: pageGeneral
+        anchors.fill: parent
+
+        Label
+          id: generalTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [General]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backGeneral
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+        ScrollablePanel
+          id: generalScroll
+          anchors.top: generalTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          layout:
+            type: verticalBox
+            fit-children: true
+            spacing: 8
+
+          Panel
+            id: rowEnabled
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Toolkit Enabled
+              width: 170
+
+            BotSwitch
+              id: enabledSwitch
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 100
+              text-align: center
+              text: Enabled
+
+          Panel
+            id: rowHideEffects
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Hide Effects
+              width: 170
+
+            BotSwitch
+              id: hideEffectsSwitch
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 100
+              text-align: center
+              text: On
+
+          Panel
+            id: rowHideTexts
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Hide Orange Texts
+              width: 170
+
+            BotSwitch
+              id: hideTextsSwitch
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 100
+              text-align: center
+              text: On
+
+          Panel
+            id: rowStopKey
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Stop Key
+              width: 170
+
+            TextEdit
+              id: stopKey
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 140
+              height: 18
+
+          Panel
+            id: rowFollowLeader
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Follow Leader
+              width: 170
+
+            TextEdit
+              id: followLeader
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 220
+              height: 18
+
+      Panel
+        id: pageSpells
+        anchors.fill: parent
+
+        Label
+          id: spellsTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [Spells]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backSpells
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+        ScrollablePanel
+          id: spellsScroll
+          anchors.top: spellsTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          layout:
+            type: verticalBox
+            fit-children: true
+            spacing: 8
+
+          Panel
+            id: rowUeSpell
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: UE Spell
+              width: 170
+
+            TextEdit
+              id: ueSpell
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 360
+              height: 18
+
+          Panel
+            id: rowUeRepeat
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: UE Repeat
+              width: 170
+
+            TextEdit
+              id: ueRepeat
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 80
+              height: 18
+
+          Panel
+            id: rowAntiParalyze
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Anti Paralyze
+              width: 170
+
+            TextEdit
+              id: antiParalyzeSpell
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 220
+              height: 18
+
+          Panel
+            id: rowHaste
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Auto Haste
+              width: 170
+
+            TextEdit
+              id: hasteSpell
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 220
+              height: 18
+
+          Panel
+            id: rowHealSpell
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Auto Heal Spell
+              width: 170
+
+            TextEdit
+              id: healSpell
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 220
+              height: 18
+
+          Panel
+            id: rowHealPct
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Auto Heal %
+              width: 170
+
+            TextEdit
+              id: healPercent
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 80
+              height: 18
+
+      Panel
+        id: pageHotkeys
+        anchors.fill: parent
+
+        Label
+          id: hkTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [Hotkeys]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backHotkeys
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+        Label
+          id: hkHint
+          anchors.top: hkTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          margin-top: 8
+          text-align: center
+          text: Click Set, then press a key (chat-safe).
+          color: #cccccc
+
+        ScrollablePanel
+          id: hkScroll
+          anchors.top: hkHint.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          layout:
+            type: verticalBox
+            fit-children: true
+            spacing: 8
+
+          Panel
+            id: rowUeNonSafe
+            height: 22
+
+            Label
+              id: ueNonSafeLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: UE (NON-SAFE)
+              width: 180
+              color: #ffaa00
+
+            TextEdit
+              id: ueNonSafeKey
+              anchors.left: ueNonSafeLabel.right
+              anchors.right: ueNonSafeSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 18
+
+            Button
+              id: ueNonSafeSet
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 45
+              height: 18
+              text: Set
+
+          Panel
+            id: rowUeSafe
+            height: 22
+
+            Label
+              id: ueSafeLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: UE (SAFE)
+              width: 180
+              color: #00c000
+
+            TextEdit
+              id: ueSafeKey
+              anchors.left: ueSafeLabel.right
+              anchors.right: ueSafeSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 18
+
+            Button
+              id: ueSafeSet
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 45
+              height: 18
+              text: Set
+
+          Panel
+            id: rowSuperSd
+            height: 22
+
+            Label
+              id: superSdLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Super SD
+              width: 180
+              color: #ffffff
+
+            TextEdit
+              id: superSdKey
+              anchors.left: superSdLabel.right
+              anchors.right: superSdSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 18
+
+            Button
+              id: superSdSet
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 45
+              height: 18
+              text: Set
+
+          Panel
+            id: rowSuperSdFire
+            height: 22
+
+            Label
+              id: superSdFireLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Super SD Fire
+              width: 180
+              color: #ff4513
+
+            TextEdit
+              id: superSdFireKey
+              anchors.left: superSdFireLabel.right
+              anchors.right: superSdFireSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 18
+
+            Button
+              id: superSdFireSet
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 45
+              height: 18
+              text: Set
+
+          Panel
+            id: rowSuperSdHoly
+            height: 22
+
+            Label
+              id: superSdHolyLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Super Holy SD
+              width: 180
+              color: #88e3dd
+
+            TextEdit
+              id: superSdHolyKey
+              anchors.left: superSdHolyLabel.right
+              anchors.right: superSdHolySet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 18
+
+            Button
+              id: superSdHolySet
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 45
+              height: 18
+              text: Set
+
+          Panel
+            id: rowSioVip
+            height: 22
+
+            Label
+              id: sioVipLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Sio VIP
+              width: 180
+              color: #3895D3
+
+            TextEdit
+              id: sioVipKey
+              anchors.left: sioVipLabel.right
+              anchors.right: sioVipSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 18
+
+            Button
+              id: sioVipSet
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 45
+              height: 18
+              text: Set
+
+    HorizontalSeparator
+      id: sepBottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: closeButton.top
+      margin-bottom: 8
+
+    Button
+      id: closeButton
+      !text: tr('Close')
+      font: cipsoftFont
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      size: 55 21
+      margin-right: 5

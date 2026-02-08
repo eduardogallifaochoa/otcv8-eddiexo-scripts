@@ -1,0 +1,45 @@
+{
+  "looting": {
+    "items": [
+
+    ],
+    "maxDanger": 10,
+    "minCapacity": 100,
+    "containers": [
+
+    ],
+    "everyItem": false
+  },
+  "targeting": [
+    {
+      "lureDelay": 250,
+      "lureMin": 1,
+      "maxDistance": 4,
+      "anchorRange": 2,
+      "lureCount": 0,
+      "avoidAttacks": false,
+      "rePositionAmount": 5,
+      "lureMax": 2,
+      "regex": "^ferumbras$",
+      "chase": false,
+      "priority": 1,
+      "keepDistance": true,
+      "closeLure": false,
+      "danger": 1,
+      "keepDistanceRange": 3,
+      "lure": false,
+      "dynamicLureDelay": false,
+      "dynamicLure": true,
+      "faceMonster": false,
+      "lureCavebot": false,
+      "dontLoot": false,
+      "diamondArrows": false,
+      "delayFrom": 2,
+      "anchor": true,
+      "closeLureAmount": 3,
+      "rePosition": false,
+      "name": "ferumbras",
+      "rpSafe": false
+    }
+  ]
+}
