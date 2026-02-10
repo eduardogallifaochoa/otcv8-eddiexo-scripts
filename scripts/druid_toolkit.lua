@@ -58,6 +58,21 @@ if (not cfg.hk.targetToggle or _trim(cfg.hk.targetToggle) == "") and _trim(cfg.s
   cfg.hk.targetToggle = cfg.stopTargetKey
 end
 
+-- Module toggles (persisted)
+cfg.mods = cfg.mods or {}
+local function modDefault(k, v)
+  if cfg.mods[k] == nil then cfg.mods[k] = v end
+end
+modDefault("antiParalyze", true)
+modDefault("autoHaste", true)
+modDefault("autoHeal", true)
+modDefault("ringSwap", true)
+modDefault("magicWall", true)
+modDefault("manaPot", true)
+modDefault("cutWg", true)
+modDefault("stamina", true)
+modDefault("spellwand", false) -- safer default: OFF
+
 --==============================================================
 -- Helpers
 --==============================================================
@@ -227,11 +242,10 @@ local function dtApplyActionDisabledVisual(key)
   -- Hide from the GUI when disabled (your request).
   if a.icon.setVisible then
     pcall(a.icon.setVisible, a.icon, not disabled)
-  end
-  if a._dtHotkeyBadge and a._dtHotkeyBadge.setVisible then
-    pcall(a._dtHotkeyBadge.setVisible, a._dtHotkeyBadge, not disabled)
-  elseif a._badge and a._badge.setVisible then
-    pcall(a._badge.setVisible, a._badge, not disabled)
+  elseif disabled and a.icon.hide then
+    pcall(a.icon.hide, a.icon)
+  elseif (not disabled) and a.icon.show then
+    pcall(a.icon.show, a.icon)
   end
 
   -- Disabled means always OFF.
@@ -259,6 +273,11 @@ local function dtSetActionOn(key, on, source)
 
   if a.macro and a.macro.setOn then
     pcall(a.macro.setOn, on)
+  end
+
+  if a.persist then
+    cfg.mods = cfg.mods or {}
+    cfg.mods[key] = on
   end
 
   -- Keep icon state consistent (but avoid recursion with addIcon callback).
@@ -290,10 +309,8 @@ local function dtEnsureHotkeyBadge(actionKey)
   if a._dtHotkeyBadge then return end
   if not UI or not UI.createWidget then return end
 
-  local parent = a.icon.getParent and a.icon:getParent() or nil
-  if not parent then return end
-
-  local ok, badge = pcall(UI.createWidget, "DtHotkeyBadge", parent)
+  -- Create as a child of the icon so it moves with drag/drop.
+  local ok, badge = pcall(UI.createWidget, "DtHotkeyBadge", a.icon)
   if not ok or not badge then return end
   a._dtHotkeyBadge = badge
   a._badge = badge
@@ -305,19 +322,6 @@ local function dtEnsureHotkeyBadge(actionKey)
   if badge.setFocusable then pcall(badge.setFocusable, badge, false) end
   if badge.setWidth then pcall(badge.setWidth, badge, 22) end
   if badge.setHeight then pcall(badge.setHeight, badge, 12) end
-  if badge.setMarginRight then pcall(badge.setMarginRight, badge, 1) end
-  if badge.setMarginTop then pcall(badge.setMarginTop, badge, 1) end
-
-  if badge.addAnchor and a.icon.getId then
-    local iconId = a.icon:getId()
-    if iconId and iconId:len() > 0 then
-      pcall(function()
-        if badge.breakAnchors then badge:breakAnchors() end
-        badge:addAnchor(AnchorRight, iconId, AnchorRight)
-        badge:addAnchor(AnchorTop, iconId, AnchorTop)
-      end)
-    end
-  end
 end
 
 local function dtUpdateHotkeyBadge(actionKey)
@@ -406,7 +410,7 @@ end
 
 local function dtShowPage(pageId)
   if not dtWindow then return end
-  local pages = { "pageMenu", "pageGeneral", "pageSpells", "pageHotkeys", "pageScripts", "pageAbout" }
+  local pages = { "pageMenu", "pageGeneral", "pageSpells", "pageModules", "pageHotkeys", "pageScripts", "pageAbout" }
   for _, id in ipairs(pages) do
     local p = dtResolve(dtWindow, id)
     if p and p.hide then p:hide() end
@@ -419,6 +423,7 @@ local function dtShowPage(pageId)
     pageMenu = "navMenu",
     pageGeneral = "navGeneral",
     pageSpells = "navSpells",
+    pageModules = "navModules",
     pageHotkeys = "navHotkeys",
     pageScripts = "navScripts",
     pageAbout = "navAbout",
@@ -493,6 +498,27 @@ local function dtRefresh()
   safeSetText(dtResolve(dtWindow, "targetToggleKey"), getHotkeyDisplay("targetToggle"))
   safeSetText(dtResolve(dtWindow, "followToggleKey"), getHotkeyDisplay("followToggle"))
 
+  -- Modules switches + hotkeys (persisted)
+  safeSetOn(dtResolve(dtWindow, "modAntiParalyzeSwitch"), cfg.mods and cfg.mods.antiParalyze == true)
+  safeSetOn(dtResolve(dtWindow, "modAutoHasteSwitch"), cfg.mods and cfg.mods.autoHaste == true)
+  safeSetOn(dtResolve(dtWindow, "modAutoHealSwitch"), cfg.mods and cfg.mods.autoHeal == true)
+  safeSetOn(dtResolve(dtWindow, "modRingSwapSwitch"), cfg.mods and cfg.mods.ringSwap == true)
+  safeSetOn(dtResolve(dtWindow, "modMagicWallSwitch"), cfg.mods and cfg.mods.magicWall == true)
+  safeSetOn(dtResolve(dtWindow, "modManaPotSwitch"), cfg.mods and cfg.mods.manaPot == true)
+  safeSetOn(dtResolve(dtWindow, "modCutWgSwitch"), cfg.mods and cfg.mods.cutWg == true)
+  safeSetOn(dtResolve(dtWindow, "modStaminaSwitch"), cfg.mods and cfg.mods.stamina == true)
+  safeSetOn(dtResolve(dtWindow, "modSpellwandSwitch"), cfg.mods and cfg.mods.spellwand == true)
+
+  safeSetText(dtResolve(dtWindow, "modAntiParalyzeKey"), getHotkeyDisplay("antiParalyze"))
+  safeSetText(dtResolve(dtWindow, "modAutoHasteKey"), getHotkeyDisplay("autoHaste"))
+  safeSetText(dtResolve(dtWindow, "modAutoHealKey"), getHotkeyDisplay("autoHeal"))
+  safeSetText(dtResolve(dtWindow, "modRingSwapKey"), getHotkeyDisplay("ringSwap"))
+  safeSetText(dtResolve(dtWindow, "modMagicWallKey"), getHotkeyDisplay("magicWall"))
+  safeSetText(dtResolve(dtWindow, "modManaPotKey"), getHotkeyDisplay("manaPot"))
+  safeSetText(dtResolve(dtWindow, "modCutWgKey"), getHotkeyDisplay("cutWg"))
+  safeSetText(dtResolve(dtWindow, "modStaminaKey"), getHotkeyDisplay("stamina"))
+  safeSetText(dtResolve(dtWindow, "modSpellwandKey"), getHotkeyDisplay("spellwand"))
+
   -- Keep icon hotkey badges + disabled visuals in sync.
   for k, a in pairs(DT_ACTIONS) do
     if a and a.icon then
@@ -516,6 +542,14 @@ local function dtApplyEnabledState()
 
     for k, _ in pairs(DT_ACTIONS) do
       dtSetActionOn(k, false, "system")
+    end
+  else
+    -- Restore persisted module states when re-enabled.
+    for k, a in pairs(DT_ACTIONS) do
+      if a and a.persist then
+        local want = cfg.mods and cfg.mods[k] == true
+        dtSetActionOn(k, want, "system")
+      end
     end
   end
   if mainUi and mainUi.title and mainUi.title.setOn then
@@ -572,23 +606,27 @@ local function dtEnsureWindow()
   local btnGeneral = dtResolve(dtWindow, "btnGeneral")
   local btnIcons = dtResolve(dtWindow, "btnIcons")
   local btnSpellsMenu = dtResolve(dtWindow, "btnSpellsMenu")
+  local btnModules = dtResolve(dtWindow, "btnModules")
   local btnScriptsMenu = dtResolve(dtWindow, "btnScriptsMenu")
   local btnAbout = dtResolve(dtWindow, "btnAbout")
 
   if btnGeneral then btnGeneral.onClick = function() dtShowPage("pageGeneral") end end
   if btnIcons then btnIcons.onClick = function() dtShowPage("pageHotkeys") end end
   if btnSpellsMenu then btnSpellsMenu.onClick = function() dtShowPage("pageSpells") end end
+  if btnModules then btnModules.onClick = function() dtShowPage("pageModules") end end
   if btnScriptsMenu then btnScriptsMenu.onClick = function() dtShowPage("pageScripts") end end
   if btnAbout then btnAbout.onClick = function() dtShowPage("pageAbout") end end
 
   -- Back buttons
   local backGeneral = dtResolve(dtWindow, "backGeneral")
   local backSpells = dtResolve(dtWindow, "backSpells")
+  local backModules = dtResolve(dtWindow, "backModules")
   local backHotkeys = dtResolve(dtWindow, "backHotkeys")
   local backScripts = dtResolve(dtWindow, "backScripts")
   local backAbout = dtResolve(dtWindow, "backAbout")
   if backGeneral then backGeneral.onClick = function() dtShowPage("pageMenu") end end
   if backSpells then backSpells.onClick = function() dtShowPage("pageMenu") end end
+  if backModules then backModules.onClick = function() dtShowPage("pageMenu") end end
   if backHotkeys then backHotkeys.onClick = function() dtShowPage("pageMenu") end end
   if backScripts then backScripts.onClick = function() dtShowPage("pageMenu") end end
   if backAbout then backAbout.onClick = function() dtShowPage("pageMenu") end end
@@ -598,12 +636,14 @@ local function dtEnsureWindow()
     local navMenu = dtResolve(dtWindow, "navMenu")
     local navGeneral = dtResolve(dtWindow, "navGeneral")
     local navSpells = dtResolve(dtWindow, "navSpells")
+    local navModules = dtResolve(dtWindow, "navModules")
     local navHotkeys = dtResolve(dtWindow, "navHotkeys")
     local navScripts = dtResolve(dtWindow, "navScripts")
     local navAbout = dtResolve(dtWindow, "navAbout")
     if navMenu then navMenu.onClick = function() dtShowPage("pageMenu") end end
     if navGeneral then navGeneral.onClick = function() dtShowPage("pageGeneral") end end
     if navSpells then navSpells.onClick = function() dtShowPage("pageSpells") end end
+    if navModules then navModules.onClick = function() dtShowPage("pageModules") end end
     if navHotkeys then navHotkeys.onClick = function() dtShowPage("pageHotkeys") end end
     if navScripts then navScripts.onClick = function() dtShowPage("pageScripts") end end
     if navAbout then navAbout.onClick = function() dtShowPage("pageAbout") end end
@@ -749,6 +789,29 @@ local function dtEnsureWindow()
     end
   end
 
+  -- Modules switches
+  local function bindModuleSwitch(actionKey, switchId)
+    local sw = dtResolve(dtWindow, switchId)
+    if not sw then return end
+    sw.onClick = function(widget)
+      if dtRefreshing then return end
+      local newOn = not (cfg.mods and cfg.mods[actionKey] == true)
+      dtSetActionOn(actionKey, newOn, "ui")
+      if widget and widget.setOn then widget:setOn(newOn) end
+      dtRefresh()
+    end
+  end
+
+  bindModuleSwitch("antiParalyze", "modAntiParalyzeSwitch")
+  bindModuleSwitch("autoHaste", "modAutoHasteSwitch")
+  bindModuleSwitch("autoHeal", "modAutoHealSwitch")
+  bindModuleSwitch("ringSwap", "modRingSwapSwitch")
+  bindModuleSwitch("magicWall", "modMagicWallSwitch")
+  bindModuleSwitch("manaPot", "modManaPotSwitch")
+  bindModuleSwitch("cutWg", "modCutWgSwitch")
+  bindModuleSwitch("stamina", "modStaminaSwitch")
+  bindModuleSwitch("spellwand", "modSpellwandSwitch")
+
   -- Scripts viewer (read-only)
   do
     local scriptFile = dtResolve(dtWindow, "scriptFile")
@@ -774,7 +837,12 @@ local function dtEnsureWindow()
       if scriptScrollbar.setValue then pcall(scriptScrollbar.setValue, scriptScrollbar, 0) end
     end
 
-    if scriptScrollbar then
+    -- Prefer native binding when available; fallback to a coarse cursor-jump hack.
+    local nativeBound = false
+    if scriptContent and scriptScrollbar and scriptContent.setVerticalScrollBar then
+      nativeBound = pcall(scriptContent.setVerticalScrollBar, scriptContent, scriptScrollbar) == true
+    end
+    if (not nativeBound) and scriptScrollbar then
       scriptScrollbar.onValueChange = function(_, value)
         if not scriptContent or not scriptContent.setCursorPos then return end
         local v = tonumber(value) or 0
@@ -936,6 +1004,15 @@ local function dtEnsureWindow()
 
   bindHotkeyRow("caveToggle", "caveToggleKey", "caveToggleSet", "caveToggleClear")
   bindHotkeyRow("targetToggle", "targetToggleKey", "targetToggleSet", "targetToggleClear")
+  bindHotkeyRow("antiParalyze", "modAntiParalyzeKey", "modAntiParalyzeSet", "modAntiParalyzeClear")
+  bindHotkeyRow("autoHaste", "modAutoHasteKey", "modAutoHasteSet", "modAutoHasteClear")
+  bindHotkeyRow("autoHeal", "modAutoHealKey", "modAutoHealSet", "modAutoHealClear")
+  bindHotkeyRow("ringSwap", "modRingSwapKey", "modRingSwapSet", "modRingSwapClear")
+  bindHotkeyRow("magicWall", "modMagicWallKey", "modMagicWallSet", "modMagicWallClear")
+  bindHotkeyRow("manaPot", "modManaPotKey", "modManaPotSet", "modManaPotClear")
+  bindHotkeyRow("cutWg", "modCutWgKey", "modCutWgSet", "modCutWgClear")
+  bindHotkeyRow("stamina", "modStaminaKey", "modStaminaSet", "modStaminaClear")
+  bindHotkeyRow("spellwand", "modSpellwandKey", "modSpellwandSet", "modSpellwandClear")
   bindHotkeyRow("ueNonSafe", "ueNonSafeKey", "ueNonSafeSet", "ueNonSafeClear")
   bindHotkeyRow("ueSafe", "ueSafeKey", "ueSafeSet", "ueSafeClear")
   bindHotkeyRow("superSd", "superSdKey", "superSdSet", "superSdClear")
@@ -1029,24 +1106,27 @@ end)
 -- Stop CaveBot / TargetBot hotkeys (handled in the main onKeyDown at bottom)
 
 -- Anti Paralyze
-macro(100, function()
+local antiParalyzeMacro = macro(100, function()
   if not isEnabled() then return end
+  if antiParalyzeMacro.isOff() then return end
   if isParalyzed() and (cfg.antiParalyzeSpell or ""):len() > 0 then
     saySpell(cfg.antiParalyzeSpell)
   end
 end)
 
 -- Auto Haste
-macro(500, function()
+local autoHasteMacro = macro(500, function()
   if not isEnabled() then return end
+  if autoHasteMacro.isOff() then return end
   if not hasHaste() and (cfg.hasteSpell or ""):len() > 0 then
     if saySpell(cfg.hasteSpell) then delay(5000) end
   end
 end)
 
 -- Auto Heal
-macro(50, function()
+local autoHealMacro = macro(50, function()
   if not isEnabled() then return end
+  if autoHealMacro.isOff() then return end
   local hpTrigger = tonumber(cfg.healPercent) or 95
   if hppercent() <= hpTrigger and (cfg.healSpell or ""):len() > 0 then
     say(cfg.healSpell)
@@ -1054,8 +1134,9 @@ macro(50, function()
 end)
 
 -- Ring swap
-macro(100, function()
+local ringSwapMacro = macro(100, function()
   if not isEnabled() then return end
+  if ringSwapMacro.isOff() then return end
   if hppercent() <= RING_PUT_AT_HP then
     local ring = findItem(ENERGY_RING_ID)
     if ring then g_game.move(ring, { x = 65535, y = SlotFinger, z = 0 }, 1) end
@@ -1076,6 +1157,7 @@ end
 
 local holdMWMacro = macro(20, function()
   if not isEnabled() then return end
+  if holdMWMacro.isOff() then return end
   if #marked_tiles == 0 then return end
 
   for _, tile in pairs(marked_tiles) do
@@ -1147,8 +1229,9 @@ onKeyUp(function(keys)
 end)
 
 -- Faster mana potting
-macro(200, function()
+local manaPotMacro = macro(200, function()
   if not isEnabled() then return end
+  if manaPotMacro.isOff() then return end
   if manapercent() <= MANA_MIN_PERCENT then
     useWith(MANA_POTION_ID, player)
   end
@@ -1170,8 +1253,9 @@ local function getNearTiles(p)
   return tiles
 end
 
-macro(500, function()
+local cutWgMacro = macro(500, function()
   if not isEnabled() then return end
+  if cutWgMacro.isOff() then return end
   local tiles = getNearTiles(pos())
   for _, tile in pairs(tiles) do
     for _, thing in ipairs(tile:getThings()) do
@@ -1183,25 +1267,10 @@ macro(500, function()
   end
 end)
 
--- Open next BP
-macro(1000, function()
-  if not isEnabled() then return end
-  local containers = getContainers()
-  for _, container in pairs(containers) do
-    if container:getItemsCount() == container:getCapacity() then
-      for _, item in ipairs(container:getItems()) do
-        if item:isContainer() then
-          g_game.open(item, container)
-          return
-        end
-      end
-    end
-  end
-end)
-
 -- Stamina item
-macro(180000, function()
+local staminaMacro = macro(180000, function()
   if not isEnabled() then return end
+  if staminaMacro.isOff() then return end
   use(11372)
 end)
 
@@ -1438,7 +1507,7 @@ local DT_ACTION_UI = {
   superSdFire = { keyId = "superSdFireKey" },
   superSdHoly = { keyId = "superSdHolyKey" },
   sioVip = { keyId = "sioVipKey" },
-  follow = { keyId = "followToggleKey" },
+  followToggle = { keyId = "followToggleKey" },
 }
 
 local function dtIsShiftDown()
@@ -1566,6 +1635,17 @@ onKeyDown(function(keys)
     return
   end
 
+  -- Modules hotkeys (persisted)
+  if hotkeyMatches("antiParalyze", keys) then dtToggleAction("antiParalyze") return end
+  if hotkeyMatches("autoHaste", keys) then dtToggleAction("autoHaste") return end
+  if hotkeyMatches("autoHeal", keys) then dtToggleAction("autoHeal") return end
+  if hotkeyMatches("ringSwap", keys) then dtToggleAction("ringSwap") return end
+  if hotkeyMatches("magicWall", keys) then dtToggleAction("magicWall") return end
+  if hotkeyMatches("manaPot", keys) then dtToggleAction("manaPot") return end
+  if hotkeyMatches("cutWg", keys) then dtToggleAction("cutWg") return end
+  if hotkeyMatches("stamina", keys) then dtToggleAction("stamina") return end
+  if hotkeyMatches("spellwand", keys) then dtToggleAction("spellwand") return end
+
   if hotkeyMatches("ueNonSafe", keys) then dtToggleAction("ueNonSafe") return end
   if hotkeyMatches("ueSafe", keys) then dtToggleAction("ueSafe") return end
   if hotkeyMatches("superSd", keys) then dtToggleAction("superSd") return end
@@ -1573,8 +1653,8 @@ onKeyDown(function(keys)
   if hotkeyMatches("superSdHoly", keys) then dtToggleAction("superSdHoly") return end
   if hotkeyMatches("sioVip", keys) then dtToggleAction("sioVip") return end
   if hotkeyMatches("followToggle", keys) then
-    if dtGetAction("follow") then
-      dtToggleAction("follow")
+    if dtGetAction("followToggle") then
+      dtToggleAction("followToggle")
     elseif ultimateFollow then
       toggleMacro(ultimateFollow)
     end
@@ -1708,7 +1788,7 @@ end)
 
 -- Follow is hotkey-driven; keep it off by default.
 ultimateFollow.setOn(false)
-dtRegisterAction("follow", {
+dtRegisterAction("followToggle", {
   label = "Follow Leader",
   macro = ultimateFollow,
   icon = nil,
@@ -1776,8 +1856,9 @@ onCreatureDisappear(function(creature)
 end)
 
 -- Spellwand
-macro(1000, function()
+local spellwandMacro = macro(1000, function()
   if not isEnabled() then return end
+  if spellwandMacro.isOff() then return end
   for _, container in pairs(g_game.getContainers()) do
     for _, item in ipairs(container:getItems()) do
       if table.contains(SPELLWAND_ITEMLIST, item:getId()) then
@@ -1787,5 +1868,90 @@ macro(1000, function()
     end
   end
 end)
+
+-- Apply persisted module states (first load)
+antiParalyzeMacro.setOn(cfg.mods.antiParalyze == true)
+autoHasteMacro.setOn(cfg.mods.autoHaste == true)
+autoHealMacro.setOn(cfg.mods.autoHeal == true)
+ringSwapMacro.setOn(cfg.mods.ringSwap == true)
+holdMWMacro.setOn(cfg.mods.magicWall == true)
+manaPotMacro.setOn(cfg.mods.manaPot == true)
+cutWgMacro.setOn(cfg.mods.cutWg == true)
+staminaMacro.setOn(cfg.mods.stamina == true)
+spellwandMacro.setOn(cfg.mods.spellwand == true)
+
+-- Register module actions (UI + hotkeys; persisted)
+dtRegisterAction("antiParalyze", {
+  label = "Anti Paralyze",
+  macro = antiParalyzeMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "antiParalyzeMacro = macro",
+  setupPage = "pageSpells",
+})
+dtRegisterAction("autoHaste", {
+  label = "Auto Haste",
+  macro = autoHasteMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "autoHasteMacro = macro",
+  setupPage = "pageSpells",
+})
+dtRegisterAction("autoHeal", {
+  label = "Auto Heal",
+  macro = autoHealMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "autoHealMacro = macro",
+  setupPage = "pageSpells",
+})
+dtRegisterAction("ringSwap", {
+  label = "Ring Swap (Immortal)",
+  macro = ringSwapMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "ringSwapMacro = macro",
+  setupPage = "pageModules",
+})
+dtRegisterAction("magicWall", {
+  label = "Magic Wall (Hold)",
+  macro = holdMWMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "holdMWMacro = macro",
+  setupPage = "pageModules",
+})
+dtRegisterAction("manaPot", {
+  label = "Faster Mana Potting",
+  macro = manaPotMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "manaPotMacro = macro",
+  setupPage = "pageModules",
+})
+dtRegisterAction("cutWg", {
+  label = "Auto Cut Wild Growth",
+  macro = cutWgMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "cutWgMacro = macro",
+  setupPage = "pageModules",
+})
+dtRegisterAction("stamina", {
+  label = "Stamina Item",
+  macro = staminaMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "staminaMacro = macro",
+  setupPage = "pageModules",
+})
+dtRegisterAction("spellwand", {
+  label = "Spellwand",
+  macro = spellwandMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "spellwandMacro = macro",
+  setupPage = "pageModules",
+})
 
 log("Loaded.")

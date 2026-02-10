@@ -31,6 +31,10 @@ DtHotkeyBadge < Label
   text-align: center
   text-offset: 1 0
   focusable: false
+  anchors.right: parent.right
+  anchors.top: parent.top
+  margin-right: 1
+  margin-top: 1
 
 
 DruidToolkitSetupWindow < MainWindow
@@ -101,6 +105,13 @@ DruidToolkitSetupWindow < MainWindow
         width: 70
         height: 20
         text: Spells
+        margin-right: 6
+
+      DtNavButton
+        id: navModules
+        width: 80
+        height: 20
+        text: Modules
         margin-right: 6
 
       DtNavButton
@@ -176,6 +187,11 @@ DruidToolkitSetupWindow < MainWindow
             id: btnSpellsMenu
             height: 34
             text: Spells
+
+          Button
+            id: btnModules
+            height: 34
+            text: Modules
 
           Button
             id: btnScriptsMenu
@@ -517,6 +533,459 @@ DruidToolkitSetupWindow < MainWindow
               tooltip: Umbral de HP% para castear el heal automaticamente (ej: 95 = cura cuando bajas a 95% o menos).
 
       Panel
+        id: pageModules
+        anchors.fill: parent
+
+        Label
+          id: modulesTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [Modules]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backModules
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+        Label
+          id: modulesHint
+          anchors.top: modulesTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          margin-top: 8
+          height: 16
+          text-align: center
+          text: Toggle modules + assign hotkeys (chat-safe).
+          color: #cccccc
+
+        DtCardScroll
+          id: modulesScroll
+          anchors.top: modulesHint.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          margin-left: 8
+          margin-right: 8
+          layout:
+            type: verticalBox
+            fit-children: true
+            spacing: 10
+
+          Panel
+            id: rowModAntiParalyze
+            height: 28
+
+            BotSwitch
+              id: modAntiParalyzeSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modAntiParalyzeSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Anti Paralyze
+
+            TextEdit
+              id: modAntiParalyzeKey
+              anchors.left: prev.right
+              anchors.right: modAntiParalyzeSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modAntiParalyzeClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modAntiParalyzeSet
+              anchors.right: modAntiParalyzeClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowModAutoHaste
+            height: 28
+
+            BotSwitch
+              id: modAutoHasteSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modAutoHasteSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Auto Haste
+
+            TextEdit
+              id: modAutoHasteKey
+              anchors.left: prev.right
+              anchors.right: modAutoHasteSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modAutoHasteClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modAutoHasteSet
+              anchors.right: modAutoHasteClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowModAutoHeal
+            height: 28
+
+            BotSwitch
+              id: modAutoHealSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modAutoHealSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Auto Heal
+
+            TextEdit
+              id: modAutoHealKey
+              anchors.left: prev.right
+              anchors.right: modAutoHealSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modAutoHealClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modAutoHealSet
+              anchors.right: modAutoHealClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowModRingSwap
+            height: 28
+
+            BotSwitch
+              id: modRingSwapSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modRingSwapSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Ring Swap (Immortal)
+
+            TextEdit
+              id: modRingSwapKey
+              anchors.left: prev.right
+              anchors.right: modRingSwapSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modRingSwapClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modRingSwapSet
+              anchors.right: modRingSwapClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowModMagicWall
+            height: 28
+
+            BotSwitch
+              id: modMagicWallSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modMagicWallSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Magic Wall (Hold)
+
+            TextEdit
+              id: modMagicWallKey
+              anchors.left: prev.right
+              anchors.right: modMagicWallSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modMagicWallClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modMagicWallSet
+              anchors.right: modMagicWallClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowModManaPot
+            height: 28
+
+            BotSwitch
+              id: modManaPotSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modManaPotSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Faster Mana Potting
+
+            TextEdit
+              id: modManaPotKey
+              anchors.left: prev.right
+              anchors.right: modManaPotSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modManaPotClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modManaPotSet
+              anchors.right: modManaPotClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowModCutWg
+            height: 28
+
+            BotSwitch
+              id: modCutWgSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modCutWgSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Auto Cut Wild Growth
+
+            TextEdit
+              id: modCutWgKey
+              anchors.left: prev.right
+              anchors.right: modCutWgSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modCutWgClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modCutWgSet
+              anchors.right: modCutWgClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowModStamina
+            height: 28
+
+            BotSwitch
+              id: modStaminaSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modStaminaSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Stamina Item
+
+            TextEdit
+              id: modStaminaKey
+              anchors.left: prev.right
+              anchors.right: modStaminaSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modStaminaClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modStaminaSet
+              anchors.right: modStaminaClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowModSpellwand
+            height: 28
+
+            BotSwitch
+              id: modSpellwandSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modSpellwandSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Spellwand
+
+            TextEdit
+              id: modSpellwandKey
+              anchors.left: prev.right
+              anchors.right: modSpellwandSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modSpellwandClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modSpellwandSet
+              anchors.right: modSpellwandClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+      Panel
         id: pageHotkeys
         anchors.fill: parent
 
@@ -567,6 +1036,7 @@ DruidToolkitSetupWindow < MainWindow
           margin-top: 10
           margin-left: 8
           margin-right: 8
+          margin-bottom: 26
 
           Panel
             id: rowCaveToggle
@@ -1183,7 +1653,7 @@ DruidToolkitSetupWindow < MainWindow
         text: "Eduardo Gallifa Scripts  |  eddiexo discord for more"
         font: verdana-11px-rounded
         color: #ff2b2b
-        opacity: 0.55
+        opacity: 0.75
 
       Button
         id: closeButton
