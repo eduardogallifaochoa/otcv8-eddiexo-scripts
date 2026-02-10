@@ -1,21 +1,45 @@
+DtNavButton < Button
+  font: verdana-11px-rounded
+  color: #e6e6e6
+  background-color: #ffffff12
+  border-width: 1
+  border-color: #ffffff26
+
+  $hover:
+    background-color: #ffffff18
+
+DtCard < Panel
+  padding: 10
+  image-source: /images/ui/panel_flat
+  image-border: 6
+  background-color: #00000066
+  border-width: 1
+  border-color: #ffffff22
+
+DtCardScroll < ScrollablePanel
+  padding: 10
+  image-source: /images/ui/panel_flat
+  image-border: 6
+  background-color: #00000066
+  border-width: 1
+  border-color: #ffffff22
+
+DtHotkeyBadge < Label
+  background-color: alpha
+  font: terminus-10px
+  color: #ffffff
+  text-align: center
+  text-offset: 1 0
+  focusable: false
+
+
 DruidToolkitSetupWindow < MainWindow
   id: dtSetupWindow
   !text: tr('Druid Toolkit')
-  size: 650 420
+  size: 920 600
   padding: 12
   draggable: true
   @onEscape: self:hide()
-
-  Panel
-    id: bg
-    anchors.fill: parent
-    image-source: /images/ui/window
-    opacity: 0.95
-
-  Panel
-    id: tint
-    anchors.fill: parent
-    background-color: #00000077
 
   Panel
     id: content
@@ -41,8 +65,66 @@ DruidToolkitSetupWindow < MainWindow
       margin-top: 6
 
     Panel
-      id: pages
+      id: navBar
       anchors.top: sepTop.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 22
+      margin-top: 8
+      padding: 3
+      image-source: /images/ui/panel_flat
+      image-border: 6
+      background-color: #00000055
+      border-width: 1
+      border-color: #ffffff22
+      layout:
+        type: horizontalBox
+        fit-children: true
+        spacing: 0
+
+      DtNavButton
+        id: navMenu
+        width: 70
+        height: 20
+        text: Menu
+        margin-right: 6
+
+      DtNavButton
+        id: navGeneral
+        width: 80
+        height: 20
+        text: General
+        margin-right: 6
+
+      DtNavButton
+        id: navSpells
+        width: 70
+        height: 20
+        text: Spells
+        margin-right: 6
+
+      DtNavButton
+        id: navHotkeys
+        width: 110
+        height: 20
+        text: Icon Hotkeys
+        margin-right: 6
+
+      DtNavButton
+        id: navScripts
+        width: 70
+        height: 20
+        text: Scripts
+
+      DtNavButton
+        id: navAbout
+        width: 70
+        height: 20
+        text: About
+
+    Panel
+      id: pages
+      anchors.top: navBar.bottom
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.bottom: sepBottom.top
@@ -59,7 +141,7 @@ DruidToolkitSetupWindow < MainWindow
           anchors.left: parent.left
           width: 300
           text-align: center
-          text: Fine Tuning
+          text: Shortcuts
           font: verdana-11px-rounded
           color: #ffffff
 
@@ -69,11 +151,11 @@ DruidToolkitSetupWindow < MainWindow
           anchors.right: parent.right
           width: 300
           text-align: center
-          text: General
+          text: Settings
           font: verdana-11px-rounded
           color: #ffffff
 
-        Panel
+        DtCard
           id: menuLeft
           anchors.top: menuLeftTitle.bottom
           anchors.left: parent.left
@@ -82,20 +164,25 @@ DruidToolkitSetupWindow < MainWindow
           margin-top: 12
           layout:
             type: verticalBox
-            fit-children: true
+            fit-children: false
             spacing: 10
-
-          Button
-            id: btnHotkeys
-            height: 34
-            text: Hotkeys
 
           Button
             id: btnIcons
             height: 34
-            text: Icons Hotkeys
+            text: Icon Hotkeys
 
-        Panel
+          Button
+            id: btnSpellsMenu
+            height: 34
+            text: Spells
+
+          Button
+            id: btnScriptsMenu
+            height: 34
+            text: Scripts
+
+        DtCard
           id: menuRight
           anchors.top: menuRightTitle.bottom
           anchors.right: parent.right
@@ -104,7 +191,7 @@ DruidToolkitSetupWindow < MainWindow
           margin-top: 12
           layout:
             type: verticalBox
-            fit-children: true
+            fit-children: false
             spacing: 10
 
           Button
@@ -113,9 +200,9 @@ DruidToolkitSetupWindow < MainWindow
             text: General
 
           Button
-            id: btnSpells
+            id: btnAbout
             height: 34
-            text: Spells
+            text: About
 
       Panel
         id: pageGeneral
@@ -140,13 +227,15 @@ DruidToolkitSetupWindow < MainWindow
           height: 18
           text: Back
 
-        ScrollablePanel
+        DtCardScroll
           id: generalScroll
           anchors.top: generalTitle.bottom
           anchors.left: parent.left
           anchors.right: parent.right
           anchors.bottom: parent.bottom
           margin-top: 12
+          margin-left: 8
+          margin-right: 8
           layout:
             type: verticalBox
             fit-children: true
@@ -213,15 +302,34 @@ DruidToolkitSetupWindow < MainWindow
             Label
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
-              text: Stop Key
+              text: Stop CaveBot Key
               width: 170
 
             TextEdit
-              id: stopKey
+              id: stopCaveKey
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               width: 140
-              height: 18
+              height: 20
+              tooltip: Hotkey para pausar/reanudar solo CaveBot (ej: Pause).
+
+          Panel
+            id: rowStopTargetKey
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Stop TargetBot Key
+              width: 170
+
+            TextEdit
+              id: stopTargetKey
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 140
+              height: 20
+              tooltip: Hotkey para pausar/reanudar solo TargetBot (ej: Pause).
 
           Panel
             id: rowFollowLeader
@@ -238,7 +346,8 @@ DruidToolkitSetupWindow < MainWindow
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               width: 220
-              height: 18
+              height: 20
+              tooltip: Nombre del player a seguir (Follow macro).
 
       Panel
         id: pageSpells
@@ -263,13 +372,15 @@ DruidToolkitSetupWindow < MainWindow
           height: 18
           text: Back
 
-        ScrollablePanel
+        DtCardScroll
           id: spellsScroll
           anchors.top: spellsTitle.bottom
           anchors.left: parent.left
           anchors.right: parent.right
           anchors.bottom: parent.bottom
           margin-top: 12
+          margin-left: 8
+          margin-right: 8
           layout:
             type: verticalBox
             fit-children: true
@@ -290,7 +401,9 @@ DruidToolkitSetupWindow < MainWindow
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               width: 360
-              height: 18
+              height: 20
+              font: terminus-10px
+              tooltip: El texto exacto del UE (ej: exevo gran mas frigo).
 
           Panel
             id: rowUeRepeat
@@ -299,7 +412,7 @@ DruidToolkitSetupWindow < MainWindow
             Label
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
-              text: UE Repeat
+              text: UE Cast Count
               width: 170
 
             TextEdit
@@ -307,7 +420,25 @@ DruidToolkitSetupWindow < MainWindow
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               width: 80
-              height: 18
+              height: 20
+              font: terminus-10px
+              tooltip: Numero de veces que se casteara el UE por activacion.
+
+            Label
+              id: ueRepeatHelp
+              anchors.right: ueRepeat.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 24
+              height: 20
+              text-align: center
+              text: (?)
+              color: #cccccc
+              background-color: #00000066
+              border-width: 1
+              border-color: #ffffff22
+              focusable: true
+              tooltip: Cuantas veces se dice el UE cuando se activa (SAFE/NS).
 
           Panel
             id: rowAntiParalyze
@@ -323,8 +454,10 @@ DruidToolkitSetupWindow < MainWindow
               id: antiParalyzeSpell
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
-              width: 220
-              height: 18
+              width: 360
+              height: 20
+              font: terminus-10px
+              tooltip: Spell para quitar paralyze (se castea solo si estas paralizado).
 
           Panel
             id: rowHaste
@@ -340,8 +473,10 @@ DruidToolkitSetupWindow < MainWindow
               id: hasteSpell
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
-              width: 220
-              height: 18
+              width: 360
+              height: 20
+              font: terminus-10px
+              tooltip: Spell para haste (se castea solo si no tienes haste).
 
           Panel
             id: rowHealSpell
@@ -357,8 +492,10 @@ DruidToolkitSetupWindow < MainWindow
               id: healSpell
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
-              width: 220
-              height: 18
+              width: 360
+              height: 20
+              font: terminus-10px
+              tooltip: Spell de heal (se castea cuando tu HP% <= Auto Heal %).
 
           Panel
             id: rowHealPct
@@ -375,7 +512,9 @@ DruidToolkitSetupWindow < MainWindow
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               width: 80
-              height: 18
+              height: 20
+              font: terminus-10px
+              tooltip: Umbral de HP% para castear el heal automaticamente (ej: 95 = cura cuando bajas a 95% o menos).
 
       Panel
         id: pageHotkeys
@@ -388,7 +527,7 @@ DruidToolkitSetupWindow < MainWindow
           anchors.right: parent.right
           height: 20
           text-align: center
-          text: [Hotkeys]
+          text: [Icon Hotkeys]
           font: verdana-11px-rounded
           color: #ffffff
 
@@ -407,24 +546,120 @@ DruidToolkitSetupWindow < MainWindow
           anchors.right: parent.right
           margin-top: 8
           text-align: center
-          text: Click Set, then press a key (chat-safe).
+          text: Set replaces, Clear removes. Press a key (chat-safe).
           color: #cccccc
 
-        ScrollablePanel
-          id: hkScroll
+        Button
+          id: manageIcons
           anchors.top: hkHint.bottom
+          anchors.right: parent.right
+          width: 110
+          height: 18
+          margin-top: 6
+          text: Manage Icons
+
+        DtCard
+          id: hkScroll
+          anchors.top: manageIcons.bottom
           anchors.left: parent.left
           anchors.right: parent.right
           anchors.bottom: parent.bottom
-          margin-top: 12
-          layout:
-            type: verticalBox
-            fit-children: true
-            spacing: 8
+          margin-top: 10
+          margin-left: 8
+          margin-right: 8
+
+          Panel
+            id: rowCaveToggle
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 28
+
+            Label
+              id: caveToggleLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: CaveBot (Toggle)
+              width: 180
+              color: #ffffff
+
+            TextEdit
+              id: caveToggleKey
+              anchors.left: caveToggleLabel.right
+              anchors.right: caveToggleSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: caveToggleClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: caveToggleSet
+              anchors.right: caveToggleClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowTargetToggle
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            Label
+              id: targetToggleLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: TargetBot (Toggle)
+              width: 180
+              color: #ffffff
+
+            TextEdit
+              id: targetToggleKey
+              anchors.left: targetToggleLabel.right
+              anchors.right: targetToggleSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: targetToggleClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: targetToggleSet
+              anchors.right: targetToggleClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
 
           Panel
             id: rowUeNonSafe
-            height: 22
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
 
             Label
               id: ueNonSafeLabel
@@ -441,19 +676,33 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
-              height: 18
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: ueNonSafeClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
 
             Button
               id: ueNonSafeSet
-              anchors.right: parent.right
+              anchors.right: ueNonSafeClear.left
               anchors.verticalCenter: parent.verticalCenter
-              width: 45
-              height: 18
+              margin-right: 4
+              width: 46
+              height: 22
               text: Set
 
           Panel
             id: rowUeSafe
-            height: 22
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
 
             Label
               id: ueSafeLabel
@@ -470,19 +719,33 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
-              height: 18
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: ueSafeClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
 
             Button
               id: ueSafeSet
-              anchors.right: parent.right
+              anchors.right: ueSafeClear.left
               anchors.verticalCenter: parent.verticalCenter
-              width: 45
-              height: 18
+              margin-right: 4
+              width: 46
+              height: 22
               text: Set
 
           Panel
             id: rowSuperSd
-            height: 22
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
 
             Label
               id: superSdLabel
@@ -499,19 +762,33 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
-              height: 18
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: superSdClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
 
             Button
               id: superSdSet
-              anchors.right: parent.right
+              anchors.right: superSdClear.left
               anchors.verticalCenter: parent.verticalCenter
-              width: 45
-              height: 18
+              margin-right: 4
+              width: 46
+              height: 22
               text: Set
 
           Panel
             id: rowSuperSdFire
-            height: 22
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
 
             Label
               id: superSdFireLabel
@@ -528,19 +805,33 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
-              height: 18
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: superSdFireClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
 
             Button
               id: superSdFireSet
-              anchors.right: parent.right
+              anchors.right: superSdFireClear.left
               anchors.verticalCenter: parent.verticalCenter
-              width: 45
-              height: 18
+              margin-right: 4
+              width: 46
+              height: 22
               text: Set
 
           Panel
             id: rowSuperSdHoly
-            height: 22
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
 
             Label
               id: superSdHolyLabel
@@ -557,19 +848,33 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
-              height: 18
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: superSdHolyClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
 
             Button
               id: superSdHolySet
-              anchors.right: parent.right
+              anchors.right: superSdHolyClear.left
               anchors.verticalCenter: parent.verticalCenter
-              width: 45
-              height: 18
+              margin-right: 4
+              width: 46
+              height: 22
               text: Set
 
           Panel
             id: rowSioVip
-            height: 22
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
 
             Label
               id: sioVipLabel
@@ -586,28 +891,311 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
-              height: 18
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: sioVipClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
 
             Button
               id: sioVipSet
+              anchors.right: sioVipClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowFollowToggle
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            Label
+              id: followToggleLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Follow (Toggle)
+              width: 180
+              color: #ffffff
+
+            TextEdit
+              id: followToggleKey
+              anchors.left: followToggleLabel.right
+              anchors.right: followToggleSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: followToggleClear
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
-              width: 45
-              height: 18
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: followToggleSet
+              anchors.right: followToggleClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
               text: Set
+
+      Panel
+        id: pageScripts
+        anchors.fill: parent
+
+        Label
+          id: scriptsTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [Scripts]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backScripts
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+        DtCard
+          id: scriptsScroll
+          anchors.top: scriptsTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          margin-left: 8
+          margin-right: 8
+          Panel
+            id: rowScriptFile
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: File
+              width: 60
+
+            TextEdit
+              id: scriptFile
+              anchors.left: prev.right
+              anchors.right: scriptLoad.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 20
+              font: terminus-10px
+              text: scripts/druid_toolkit.lua
+              tooltip: Ruta relativa dentro del profile (ej: scripts/druid_toolkit.lua).
+
+            Button
+              id: scriptLoad
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              height: 20
+              text: Load
+
+          Panel
+            id: rowScriptSearch
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Search
+              width: 60
+
+            TextEdit
+              id: scriptSearch
+              anchors.left: prev.right
+              anchors.right: scriptFind.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 20
+              font: terminus-10px
+              tooltip: Buscar texto dentro del archivo (case-insensitive).
+
+            Button
+              id: scriptFind
+              anchors.right: scriptNext.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 60
+              height: 20
+              text: Find
+
+            Button
+              id: scriptNext
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 60
+              height: 20
+              text: Next
+
+          Label
+            id: scriptStatus
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 8
+            height: 16
+            text: ""
+            color: #cccccc
+
+          Panel
+            id: scriptContentBox
+            anchors.top: prev.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+
+            TextEdit
+              id: scriptContent
+              anchors.top: parent.top
+              anchors.left: parent.left
+              anchors.bottom: parent.bottom
+              anchors.right: scriptScrollbar.left
+              margin-right: 8
+              text-wrap: false
+              multiline: true
+              font: terminus-10px
+              tooltip: Viewer (read-only). Si no carga, revisa el path.
+
+            VerticalScrollBar
+              id: scriptScrollbar
+              anchors.top: parent.top
+              anchors.bottom: parent.bottom
+              anchors.right: parent.right
+              width: 14
+              pixels-scroll: true
+              step: 200
+
+      Panel
+        id: pageAbout
+        anchors.fill: parent
+
+        Label
+          id: aboutTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [About]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backAbout
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+        DtCardScroll
+          id: aboutScroll
+          anchors.top: aboutTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          margin-left: 8
+          margin-right: 8
+          layout:
+            type: verticalBox
+            fit-children: true
+            spacing: 10
+
+          Label
+            id: aboutText
+            text: "Druid Toolkit: loader-based bot scripts for OTCv8.\n\nTip: si quieres editar esto mejor usa VSCode o Notepad++.\nVSCode tiene Copilot/AI y ayuda un chingo si no eres coder."
+            text-wrap: true
+            multiline: true
+            color: #dddddd
+
+          Button
+            id: aboutRepo
+            height: 26
+            text: "GitHub Repo (Open Source)"
+
+          Label
+            id: aboutRepoUrl
+            text: "github.com/eduardogallifaochoa/otcv8-eddiexo-scripts"
+            color: #cccccc
 
     HorizontalSeparator
       id: sepBottom
       anchors.left: parent.left
       anchors.right: parent.right
-      anchors.bottom: closeButton.top
-      margin-bottom: 8
+      anchors.bottom: footer.top
+      margin-bottom: 22
 
-    Button
-      id: closeButton
-      !text: tr('Close')
-      font: cipsoftFont
+    Panel
+      id: footer
+      anchors.left: parent.left
       anchors.right: parent.right
       anchors.bottom: parent.bottom
-      size: 55 21
-      margin-right: 5
+      height: 26
+      padding-left: 8
+      padding-right: 8
+      image-source: /images/ui/panel_flat
+      image-border: 6
+      background-color: #00000033
+      border-width: 1
+      border-color: #ffffff18
+
+      Label
+        id: signature
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        text-align: left
+        text: "Eduardo Gallifa Scripts  |  eddiexo discord for more"
+        font: verdana-11px-rounded
+        color: #ff2b2b
+        opacity: 0.55
+
+      Button
+        id: closeButton
+        !text: tr('Close')
+        font: cipsoftFont
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        size: 55 21
+
+
+
+
+
+
+

@@ -18,7 +18,10 @@ if cfg.hideEffects == nil then cfg.hideEffects = true end
 if cfg.hideOrangeTexts == nil then cfg.hideOrangeTexts = true end
 
 -- Defaults / editable settings
-cfg.stopKey = cfg.stopKey or "Pause"
+-- Stop keys (separate, as requested). Migrate from legacy cfg.stopKey if present.
+cfg.stopCaveKey = cfg.stopCaveKey or cfg.stopKey or "Pause"
+cfg.stopTargetKey = cfg.stopTargetKey or cfg.stopKey or ""
+cfg.stopKey = nil
 cfg.ueSpell = cfg.ueSpell or "exevo gran mas frigo"
 cfg.ueRepeat = cfg.ueRepeat or 4
 cfg.ueMinMonstersSafe = cfg.ueMinMonstersSafe or 4
@@ -37,7 +40,23 @@ cfg.hk = cfg.hk or {
   superSdFire = "F4",
   superSdHoly = "F5",
   sioVip = "F6",
+  caveToggle = "",
+  targetToggle = "",
+  followToggle = (cfg.hk and cfg.hk.follow) or "F7",
 }
+-- Migrate legacy follow key
+if cfg.hk.follow and (not cfg.hk.followToggle or _trim(cfg.hk.followToggle) == "") then
+  cfg.hk.followToggle = cfg.hk.follow
+end
+cfg.hk.follow = nil
+
+-- Migrate legacy stop keys (from General page text edits) into hotkey list if empty.
+if (not cfg.hk.caveToggle or _trim(cfg.hk.caveToggle) == "") and _trim(cfg.stopCaveKey or ""):len() > 0 then
+  cfg.hk.caveToggle = cfg.stopCaveKey
+end
+if (not cfg.hk.targetToggle or _trim(cfg.hk.targetToggle) == "") and _trim(cfg.stopTargetKey or ""):len() > 0 then
+  cfg.hk.targetToggle = cfg.stopTargetKey
+end
 
 --==============================================================
 -- Helpers
@@ -61,7 +80,13 @@ if not table.contains then
 end
 
 local function safeSetText(widget, text)
-  if widget and widget.setText then widget:setText(text) end
+  if not widget or not widget.setText then return end
+  text = tostring(text or "")
+  if widget.getText then
+    local ok, cur = pcall(widget.getText, widget)
+    if ok and cur == text then return end
+  end
+  widget:setText(text)
 end
 
 local function safeSetOn(widget, v)
@@ -73,14 +98,94 @@ local function toggleMacro(m)
   m.setOn(not m.isOn())
 end
 
-local function getHotkey(action)
-  return (cfg.hk and cfg.hk[action]) or ""
+local function _trim(s)
+  if type(s) ~= "string" then return "" end
+  s = s:gsub("^%s+", ""):gsub("%s+$", "")
+  return s
 end
 
-local function setHotkey(action, key)
+local function _hkEq(a, b)
+  return _trim(a):lower() == _trim(b):lower()
+end
+
+local function parseHotkeyList(v)
+  local out = {}
+  if type(v) == "table" then
+    for _, x in ipairs(v) do
+      local t = _trim(x)
+      if t:len() > 0 then table.insert(out, t) end
+    end
+    return out
+  end
+  if type(v) ~= "string" then return out end
+
+  -- Accept: "F1", "F1 | Shift+Q", "F1;Shift+Q", "F1\nShift+Q"
+  for token in v:gmatch("[^,;|%c]+") do
+    token = _trim(token)
+    if token:len() > 0 then
+      local exists = false
+      for _, k in ipairs(out) do
+        if _hkEq(k, token) then exists = true break end
+      end
+      if not exists then table.insert(out, token) end
+    end
+  end
+  return out
+end
+
+local function serializeHotkeyList(list, sep)
+  sep = sep or ";"
+  if type(list) ~= "table" then return "" end
+  local out = {}
+  for _, x in ipairs(list) do
+    local t = _trim(x)
+    if t:len() > 0 then table.insert(out, t) end
+  end
+  return table.concat(out, sep)
+end
+
+local function getHotkeyList(action)
+  return parseHotkeyList((cfg.hk and cfg.hk[action]) or "")
+end
+
+local function getHotkeyDisplay(action)
+  return table.concat(getHotkeyList(action), " | ")
+end
+
+local function setHotkeySet(action, key)
   if not action or type(action) ~= "string" then return end
-  if not key or type(key) ~= "string" or key:len() == 0 then return end
-  cfg.hk[action] = key
+  key = _trim(key)
+  if key:len() == 0 then return end
+  cfg.hk[action] = serializeHotkeyList({ key }, ";")
+end
+
+local function addHotkey(action, key)
+  if not action or type(action) ~= "string" then return end
+  key = _trim(key)
+  if key:len() == 0 then return end
+  local list = getHotkeyList(action)
+  for _, k in ipairs(list) do
+    if _hkEq(k, key) then
+      cfg.hk[action] = serializeHotkeyList(list, ";")
+      return
+    end
+  end
+  table.insert(list, key)
+  cfg.hk[action] = serializeHotkeyList(list, ";")
+end
+
+local function clearHotkeys(action)
+  if not action or type(action) ~= "string" then return end
+  cfg.hk[action] = ""
+end
+
+local function hotkeyMatches(action, keys)
+  keys = _trim(keys)
+  if keys:len() == 0 then return false end
+  for _, k in ipairs(getHotkeyList(action)) do
+    if _hkEq(k, keys) then return true end
+  end
+  return false
 end
 
 local function isEnabled()
@@ -89,6 +194,159 @@ end
 
 -- Forward declarations for icon-driven macros (used by master enable/disable).
 local ueNonSafe, ueSafe, superSd, superSdFire, superSdHoly, sioVipMacro
+
+-- Action registry (single source of truth for icon <-> macro wiring)
+local DT_ACTIONS = {}
+
+local function dtRegisterAction(key, def)
+  if type(key) ~= "string" or key:len() == 0 then return end
+  if type(def) ~= "table" then def = {} end
+  def.key = key
+  DT_ACTIONS[key] = def
+end
+
+local function dtGetAction(key)
+  return DT_ACTIONS[key]
+end
+
+local function dtMacroIsOn(m)
+  if not m or not m.isOn then return false end
+  local ok, v = pcall(m.isOn)
+  return ok and v == true
+end
+
+local function dtIsActionDisabled(key)
+  return cfg.actionDisabled and cfg.actionDisabled[key] == true
+end
+
+local function dtApplyActionDisabledVisual(key)
+  local a = dtGetAction(key)
+  if not a or not a.icon then return end
+  local disabled = dtIsActionDisabled(key)
+
+  -- Hide from the GUI when disabled (your request).
+  if a.icon.setVisible then
+    pcall(a.icon.setVisible, a.icon, not disabled)
+  end
+  if a._dtHotkeyBadge and a._dtHotkeyBadge.setVisible then
+    pcall(a._dtHotkeyBadge.setVisible, a._dtHotkeyBadge, not disabled)
+  elseif a._badge and a._badge.setVisible then
+    pcall(a._badge.setVisible, a._badge, not disabled)
+  end
+
+  -- Disabled means always OFF.
+  if disabled then
+    if a.macro and a.macro.setOn then pcall(a.macro.setOn, false) end
+    if a.icon and a.icon.setOn then
+      -- Suppress addIcon callback recursion.
+      a.icon._dtSuppress = true
+      pcall(a.icon.setOn, a.icon, false)
+      schedule(0, function()
+        if a.icon then a.icon._dtSuppress = nil end
+      end)
+    end
+  end
+end
+
+local function dtSetActionOn(key, on, source)
+  local a = dtGetAction(key)
+  if not a then return end
+  on = on == true
+
+  if dtIsActionDisabled(key) then
+    on = false
+  end
+
+  if a.macro and a.macro.setOn then
+    pcall(a.macro.setOn, on)
+  end
+
+  -- Keep icon state consistent (but avoid recursion with addIcon callback).
+  if a.icon and a.icon.setOn and source ~= "icon" then
+    a.icon._dtSuppress = true
+    pcall(a.icon.setOn, a.icon, on)
+    schedule(0, function()
+      if a.icon then a.icon._dtSuppress = nil end
+    end)
+  end
+end
+
+local function dtToggleAction(key)
+  local a = dtGetAction(key)
+  if not a then return end
+  if dtIsActionDisabled(key) then return end
+  if a.icon and a.icon.onClick then
+    -- Keep icon + macro behavior consistent with a real click.
+    pcall(function() a.icon:onClick() end)
+    return
+  end
+  local newOn = not dtMacroIsOn(a.macro)
+  dtSetActionOn(key, newOn, "hotkey")
+end
+
+local function dtEnsureHotkeyBadge(actionKey)
+  local a = dtGetAction(actionKey)
+  if not a or not a.icon then return end
+  if a._dtHotkeyBadge then return end
+  if not UI or not UI.createWidget then return end
+
+  local parent = a.icon.getParent and a.icon:getParent() or nil
+  if not parent then return end
+
+  local ok, badge = pcall(UI.createWidget, "DtHotkeyBadge", parent)
+  if not ok or not badge then return end
+  a._dtHotkeyBadge = badge
+  a._badge = badge
+
+  if badge.setId then pcall(badge.setId, badge, "dt_hkbadge_" .. tostring(actionKey)) end
+
+  -- Don't block clicks on the icon (badge is purely decorative).
+  if badge.setPhantom then pcall(badge.setPhantom, badge, true) end
+  if badge.setFocusable then pcall(badge.setFocusable, badge, false) end
+  if badge.setWidth then pcall(badge.setWidth, badge, 22) end
+  if badge.setHeight then pcall(badge.setHeight, badge, 12) end
+  if badge.setMarginRight then pcall(badge.setMarginRight, badge, 1) end
+  if badge.setMarginTop then pcall(badge.setMarginTop, badge, 1) end
+
+  if badge.addAnchor and a.icon.getId then
+    local iconId = a.icon:getId()
+    if iconId and iconId:len() > 0 then
+      pcall(function()
+        if badge.breakAnchors then badge:breakAnchors() end
+        badge:addAnchor(AnchorRight, iconId, AnchorRight)
+        badge:addAnchor(AnchorTop, iconId, AnchorTop)
+      end)
+    end
+  end
+end
+
+local function dtUpdateHotkeyBadge(actionKey)
+  local a = dtGetAction(actionKey)
+  if not a or not a.icon then return end
+  dtEnsureHotkeyBadge(actionKey)
+  local badge = a._dtHotkeyBadge or a._badge
+  if not badge or not badge.setText then return end
+  local text = getHotkeyDisplay(actionKey)
+  text = _trim(text)
+  if text:len() == 0 then
+    if badge.hide then pcall(badge.hide, badge) end
+    return
+  end
+  -- Keep it compact: show only the first binding.
+  local first = parseHotkeyList(text)[1] or text
+  first = _trim(first)
+  -- Cosmetic compacting for modifiers.
+  first = first:gsub("Shift%+", "S+"):gsub("Ctrl%+", "C+"):gsub("Alt%+", "A+")
+  safeSetText(badge, first)
+  if badge.setWidth then
+    local w = 14 + (#first * 7)
+    if w < 18 then w = 18 end
+    if w > 40 then w = 40 end
+    pcall(badge.setWidth, badge, w)
+  end
+  if badge.show then pcall(badge.show, badge) end
+  if badge.raise then pcall(badge.raise, badge) end
+end
 
 --==============================================================
 -- Main UI Row (PvP Scripts style)
@@ -133,7 +391,11 @@ end
 --==============================================================
 
 local dtWindow = nil
-local HK_WAITING_FOR = nil
+-- Hotkey capture state: { action = "ueNonSafe" }
+local HK_CAPTURE = nil
+-- Forward declaration (used by icon context menu)
+local dtOpen = nil
+local dtRefreshing = false
 
 local function dtResolve(win, id)
   if not win then return nil end
@@ -144,13 +406,31 @@ end
 
 local function dtShowPage(pageId)
   if not dtWindow then return end
-  local pages = { "pageMenu", "pageGeneral", "pageSpells", "pageHotkeys" }
+  local pages = { "pageMenu", "pageGeneral", "pageSpells", "pageHotkeys", "pageScripts", "pageAbout" }
   for _, id in ipairs(pages) do
     local p = dtResolve(dtWindow, id)
     if p and p.hide then p:hide() end
   end
   local page = dtResolve(dtWindow, pageId)
   if page and page.show then page:show() end
+
+  -- Nav active state (cheap "segmented control" highlight)
+  local navMap = {
+    pageMenu = "navMenu",
+    pageGeneral = "navGeneral",
+    pageSpells = "navSpells",
+    pageHotkeys = "navHotkeys",
+    pageScripts = "navScripts",
+    pageAbout = "navAbout",
+  }
+  for pid, navId in pairs(navMap) do
+    local b = dtResolve(dtWindow, navId)
+    if b and b.setBackgroundColor then
+      local active = (pid == pageId)
+      pcall(b.setBackgroundColor, b, active and "#ffffff26" or "#ffffff12")
+      if b.setColor then pcall(b.setColor, b, active and "#ffffff" or "#e6e6e6") end
+    end
+  end
 end
 
 local function getBotConfigName()
@@ -186,12 +466,14 @@ end
 
 local function dtRefresh()
   if not dtWindow then return end
+  dtRefreshing = true
 
   safeSetOn(dtResolve(dtWindow, "enabledSwitch"), isEnabled())
   safeSetOn(dtResolve(dtWindow, "hideEffectsSwitch"), cfg.hideEffects == true)
   safeSetOn(dtResolve(dtWindow, "hideTextsSwitch"), cfg.hideOrangeTexts == true)
 
-  safeSetText(dtResolve(dtWindow, "stopKey"), cfg.stopKey or "")
+  safeSetText(dtResolve(dtWindow, "stopCaveKey"), getHotkeyDisplay("caveToggle"))
+  safeSetText(dtResolve(dtWindow, "stopTargetKey"), getHotkeyDisplay("targetToggle"))
   safeSetText(dtResolve(dtWindow, "followLeader"), cfg.followLeader or "")
 
   safeSetText(dtResolve(dtWindow, "ueSpell"), cfg.ueSpell or "")
@@ -201,23 +483,40 @@ local function dtRefresh()
   safeSetText(dtResolve(dtWindow, "healSpell"), cfg.healSpell or "")
   safeSetText(dtResolve(dtWindow, "healPercent"), tostring(cfg.healPercent or 95))
 
-  safeSetText(dtResolve(dtWindow, "ueNonSafeKey"), getHotkey("ueNonSafe"))
-  safeSetText(dtResolve(dtWindow, "ueSafeKey"), getHotkey("ueSafe"))
-  safeSetText(dtResolve(dtWindow, "superSdKey"), getHotkey("superSd"))
-  safeSetText(dtResolve(dtWindow, "superSdFireKey"), getHotkey("superSdFire"))
-  safeSetText(dtResolve(dtWindow, "superSdHolyKey"), getHotkey("superSdHoly"))
-  safeSetText(dtResolve(dtWindow, "sioVipKey"), getHotkey("sioVip"))
+  safeSetText(dtResolve(dtWindow, "ueNonSafeKey"), getHotkeyDisplay("ueNonSafe"))
+  safeSetText(dtResolve(dtWindow, "ueSafeKey"), getHotkeyDisplay("ueSafe"))
+  safeSetText(dtResolve(dtWindow, "superSdKey"), getHotkeyDisplay("superSd"))
+  safeSetText(dtResolve(dtWindow, "superSdFireKey"), getHotkeyDisplay("superSdFire"))
+  safeSetText(dtResolve(dtWindow, "superSdHolyKey"), getHotkeyDisplay("superSdHoly"))
+  safeSetText(dtResolve(dtWindow, "sioVipKey"), getHotkeyDisplay("sioVip"))
+  safeSetText(dtResolve(dtWindow, "caveToggleKey"), getHotkeyDisplay("caveToggle"))
+  safeSetText(dtResolve(dtWindow, "targetToggleKey"), getHotkeyDisplay("targetToggle"))
+  safeSetText(dtResolve(dtWindow, "followToggleKey"), getHotkeyDisplay("followToggle"))
+
+  -- Keep icon hotkey badges + disabled visuals in sync.
+  for k, a in pairs(DT_ACTIONS) do
+    if a and a.icon then
+      dtUpdateHotkeyBadge(k)
+      dtApplyActionDisabledVisual(k)
+    end
+  end
+
+  dtRefreshing = false
 end
 
 local function dtApplyEnabledState()
   if not isEnabled() then
-    HK_WAITING_FOR = nil
+    HK_CAPTURE = nil
     if ueNonSafe then ueNonSafe.setOn(false) end
     if ueSafe then ueSafe.setOn(false) end
     if superSd then superSd.setOn(false) end
     if superSdFire then superSdFire.setOn(false) end
     if superSdHoly then superSdHoly.setOn(false) end
     if sioVipMacro then sioVipMacro.setOn(false) end
+
+    for k, _ in pairs(DT_ACTIONS) do
+      dtSetActionOn(k, false, "system")
+    end
   end
   if mainUi and mainUi.title and mainUi.title.setOn then
     mainUi.title:setOn(isEnabled())
@@ -263,13 +562,6 @@ local function dtEnsureWindow()
   dtWindow = win
   dtWindow:hide()
 
-  -- Background
-  local bg = dtResolve(dtWindow, "bg")
-  local bgPath = resolveBackgroundPath()
-  if bg and bgPath and bg.setImageSource then
-    pcall(function() bg:setImageSource(bgPath) end)
-  end
-
   -- Close
   local closeButton = dtResolve(dtWindow, "closeButton")
   if closeButton then
@@ -278,22 +570,82 @@ local function dtEnsureWindow()
 
   -- Menu buttons
   local btnGeneral = dtResolve(dtWindow, "btnGeneral")
-  local btnHotkeys = dtResolve(dtWindow, "btnHotkeys")
   local btnIcons = dtResolve(dtWindow, "btnIcons")
-  local btnSpells = dtResolve(dtWindow, "btnSpells")
+  local btnSpellsMenu = dtResolve(dtWindow, "btnSpellsMenu")
+  local btnScriptsMenu = dtResolve(dtWindow, "btnScriptsMenu")
+  local btnAbout = dtResolve(dtWindow, "btnAbout")
 
   if btnGeneral then btnGeneral.onClick = function() dtShowPage("pageGeneral") end end
-  if btnSpells then btnSpells.onClick = function() dtShowPage("pageSpells") end end
-  if btnHotkeys then btnHotkeys.onClick = function() dtShowPage("pageHotkeys") end end
   if btnIcons then btnIcons.onClick = function() dtShowPage("pageHotkeys") end end
+  if btnSpellsMenu then btnSpellsMenu.onClick = function() dtShowPage("pageSpells") end end
+  if btnScriptsMenu then btnScriptsMenu.onClick = function() dtShowPage("pageScripts") end end
+  if btnAbout then btnAbout.onClick = function() dtShowPage("pageAbout") end end
 
   -- Back buttons
   local backGeneral = dtResolve(dtWindow, "backGeneral")
   local backSpells = dtResolve(dtWindow, "backSpells")
   local backHotkeys = dtResolve(dtWindow, "backHotkeys")
+  local backScripts = dtResolve(dtWindow, "backScripts")
+  local backAbout = dtResolve(dtWindow, "backAbout")
   if backGeneral then backGeneral.onClick = function() dtShowPage("pageMenu") end end
   if backSpells then backSpells.onClick = function() dtShowPage("pageMenu") end end
   if backHotkeys then backHotkeys.onClick = function() dtShowPage("pageMenu") end end
+  if backScripts then backScripts.onClick = function() dtShowPage("pageMenu") end end
+  if backAbout then backAbout.onClick = function() dtShowPage("pageMenu") end end
+
+  -- Nav bar (always visible)
+  do
+    local navMenu = dtResolve(dtWindow, "navMenu")
+    local navGeneral = dtResolve(dtWindow, "navGeneral")
+    local navSpells = dtResolve(dtWindow, "navSpells")
+    local navHotkeys = dtResolve(dtWindow, "navHotkeys")
+    local navScripts = dtResolve(dtWindow, "navScripts")
+    local navAbout = dtResolve(dtWindow, "navAbout")
+    if navMenu then navMenu.onClick = function() dtShowPage("pageMenu") end end
+    if navGeneral then navGeneral.onClick = function() dtShowPage("pageGeneral") end end
+    if navSpells then navSpells.onClick = function() dtShowPage("pageSpells") end end
+    if navHotkeys then navHotkeys.onClick = function() dtShowPage("pageHotkeys") end end
+    if navScripts then navScripts.onClick = function() dtShowPage("pageScripts") end end
+    if navAbout then navAbout.onClick = function() dtShowPage("pageAbout") end end
+  end
+
+  -- About: repo button
+  do
+    local aboutRepo = dtResolve(dtWindow, "aboutRepo")
+    if aboutRepo then
+      aboutRepo.onClick = function()
+        if g_platform and g_platform.openUrl then
+          g_platform.openUrl("https://github.com/eduardogallifaochoa/otcv8-eddiexo-scripts")
+        end
+      end
+    end
+  end
+
+  -- Icon Hotkeys: Manage Icons popup (re-enable hidden icons)
+  do
+    local manageIcons = dtResolve(dtWindow, "manageIcons")
+    if manageIcons then
+      manageIcons.onClick = function()
+        local menu = g_ui.createWidget("PopupMenu")
+        menu:setGameMenu(true)
+        menu:addSeparator()
+        for k, a in pairs(DT_ACTIONS) do
+          if a and a.icon then
+            local disabled = dtIsActionDisabled(k)
+            local label = (disabled and "[Show] " or "[Hide] ") .. (a.label or k)
+            menu:addOption(label, function()
+              cfg.actionDisabled = cfg.actionDisabled or {}
+              cfg.actionDisabled[k] = not disabled
+              dtSetActionOn(k, false, "system")
+              dtApplyActionDisabledVisual(k)
+              dtRefresh()
+            end, "")
+          end
+        end
+        menu:display(g_window.getMousePosition())
+      end
+    end
+  end
 
   -- General bindings
   local enabledSwitch = dtResolve(dtWindow, "enabledSwitch")
@@ -324,81 +676,280 @@ local function dtEnsureWindow()
     end
   end
 
-  local stopKey = dtResolve(dtWindow, "stopKey")
-  if stopKey then
-    stopKey.onTextChange = function(_, text) cfg.stopKey = text end
+  local stopCaveKey = dtResolve(dtWindow, "stopCaveKey")
+  if stopCaveKey then
+    stopCaveKey.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      setHotkeySet("caveToggle", text)
+    end
+  end
+
+  local stopTargetKey = dtResolve(dtWindow, "stopTargetKey")
+  if stopTargetKey then
+    stopTargetKey.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      setHotkeySet("targetToggle", text)
+    end
   end
 
   local followLeader = dtResolve(dtWindow, "followLeader")
   if followLeader then
-    followLeader.onTextChange = function(_, text) cfg.followLeader = text end
+    followLeader.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      cfg.followLeader = text
+    end
   end
 
   -- Spells bindings
   local ueSpell = dtResolve(dtWindow, "ueSpell")
   if ueSpell then
-    ueSpell.onTextChange = function(_, text) cfg.ueSpell = text end
+    ueSpell.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      cfg.ueSpell = text
+    end
   end
 
   local ueRepeat = dtResolve(dtWindow, "ueRepeat")
   if ueRepeat then
     ueRepeat.onTextChange = function(widget, text)
+      if dtRefreshing then return end
       cfg.ueRepeat = tonumber(text) or 4
-      safeSetText(widget, tostring(cfg.ueRepeat))
     end
   end
 
   local antiParalyzeSpell = dtResolve(dtWindow, "antiParalyzeSpell")
   if antiParalyzeSpell then
-    antiParalyzeSpell.onTextChange = function(_, text) cfg.antiParalyzeSpell = text end
+    antiParalyzeSpell.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      cfg.antiParalyzeSpell = text
+    end
   end
 
   local hasteSpell = dtResolve(dtWindow, "hasteSpell")
   if hasteSpell then
-    hasteSpell.onTextChange = function(_, text) cfg.hasteSpell = text end
+    hasteSpell.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      cfg.hasteSpell = text
+    end
   end
 
   local healSpell = dtResolve(dtWindow, "healSpell")
   if healSpell then
-    healSpell.onTextChange = function(_, text) cfg.healSpell = text end
+    healSpell.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      cfg.healSpell = text
+    end
   end
 
   local healPercent = dtResolve(dtWindow, "healPercent")
   if healPercent then
     healPercent.onTextChange = function(widget, text)
+      if dtRefreshing then return end
       cfg.healPercent = tonumber(text) or 95
-      safeSetText(widget, tostring(cfg.healPercent))
     end
   end
 
-  -- Hotkey "Set" binding helper
-  local function bindHotkeyRow(actionKey, keyId, setId)
+  -- Scripts viewer (read-only)
+  do
+    local scriptFile = dtResolve(dtWindow, "scriptFile")
+    local scriptLoad = dtResolve(dtWindow, "scriptLoad")
+    local scriptContent = dtResolve(dtWindow, "scriptContent")
+    local scriptScrollbar = dtResolve(dtWindow, "scriptScrollbar")
+    local scriptSearch = dtResolve(dtWindow, "scriptSearch")
+    local scriptFind = dtResolve(dtWindow, "scriptFind")
+    local scriptNext = dtResolve(dtWindow, "scriptNext")
+    local scriptStatus = dtResolve(dtWindow, "scriptStatus")
+
+    local scriptSearchState = { query = "", lastPos = 0 }
+    local scriptTextLen = 0
+
+    local function syncScriptScrollbar()
+      if not scriptScrollbar or not scriptScrollbar.setMinimum or not scriptScrollbar.setMaximum then return end
+      if scriptContent and scriptContent.getText then
+        local ok, txt = pcall(scriptContent.getText, scriptContent)
+        if ok and type(txt) == "string" then scriptTextLen = #txt else scriptTextLen = 0 end
+      end
+      pcall(scriptScrollbar.setMinimum, scriptScrollbar, 0)
+      pcall(scriptScrollbar.setMaximum, scriptScrollbar, math.max(0, scriptTextLen))
+      if scriptScrollbar.setValue then pcall(scriptScrollbar.setValue, scriptScrollbar, 0) end
+    end
+
+    if scriptScrollbar then
+      scriptScrollbar.onValueChange = function(_, value)
+        if not scriptContent or not scriptContent.setCursorPos then return end
+        local v = tonumber(value) or 0
+        if v < 0 then v = 0 end
+        if v > scriptTextLen then v = scriptTextLen end
+        pcall(scriptContent.setCursorPos, scriptContent, v)
+      end
+    end
+
+    if scriptContent and scriptContent.setEditable then
+      pcall(function() scriptContent:setEditable(false) end)
+    end
+
+    local function toResourcePath(rel)
+      if type(rel) ~= "string" then return nil end
+      rel = rel:gsub("\\", "/")
+      rel = _trim(rel)
+      if rel:len() == 0 then return nil end
+      if rel:sub(1, 1) == "/" then return rel end
+
+      local cfgName = getBotConfigName() or __druid_toolkit_profile
+      if cfgName and type(cfgName) == "string" and cfgName:len() > 0 then
+        return "/bot/" .. cfgName .. "/" .. rel
+      end
+      return "/" .. rel
+    end
+
+    local function readResource(path)
+      if not path then return nil, "missing path" end
+      if g_resources and g_resources.readFileContents then
+        local ok, data = pcall(g_resources.readFileContents, path)
+        if ok then return data end
+      end
+      if readFileContents then
+        local ok, data = pcall(readFileContents, path)
+        if ok then return data end
+      end
+      return nil, "unable to read"
+    end
+
+    local function loadNow()
+      if not scriptContent or not scriptContent.setText then return end
+      local rel = scriptFile and scriptFile.getText and scriptFile:getText() or "scripts/druid_toolkit.lua"
+      local res = toResourcePath(rel)
+      local data, err = readResource(res)
+      if not data then
+        scriptContent:setText("Failed loading: " .. tostring(rel) .. "\n(" .. tostring(err) .. ")")
+        safeSetText(scriptStatus, "Load failed.")
+        return
+      end
+      scriptContent:setText(data)
+      syncScriptScrollbar()
+      scriptSearchState.lastPos = 0
+      safeSetText(scriptStatus, "")
+    end
+
+    if scriptLoad then scriptLoad.onClick = loadNow end
+    -- Expose for icon context menu (safe no-op if widgets aren't available).
+    dtWindow._dtLoadScript = function(rel)
+      if scriptFile and scriptFile.setText and type(rel) == "string" then
+        scriptFile:setText(rel)
+      end
+      loadNow()
+    end
+
+    local function tryHighlightMatch(s, e)
+      if not scriptContent then return end
+      -- Different OTC builds expose different methods; probe safely.
+      if scriptContent.setCursorPos then pcall(scriptContent.setCursorPos, scriptContent, e) end
+      if scriptContent.setSelection then pcall(scriptContent.setSelection, scriptContent, s, e) end
+      if scriptContent.select then pcall(scriptContent.select, scriptContent, s, e) end
+      if scriptContent.focus then pcall(scriptContent.focus, scriptContent) end
+      if scriptScrollbar and scriptScrollbar.setValue then
+        pcall(scriptScrollbar.setValue, scriptScrollbar, e)
+      end
+    end
+
+    local function doFind(reset)
+      if not scriptContent or not scriptContent.getText then return end
+      local q = scriptSearch and scriptSearch.getText and scriptSearch:getText() or ""
+      q = _trim(q)
+      if q:len() == 0 then
+        safeSetText(scriptStatus, "Empty search.")
+        scriptSearchState.query = ""
+        scriptSearchState.lastPos = 0
+        return
+      end
+
+      local text = scriptContent:getText() or ""
+      local hay = text:lower()
+      local needle = q:lower()
+
+      local startAt = 1
+      if not reset and scriptSearchState.query == needle and scriptSearchState.lastPos > 0 then
+        startAt = scriptSearchState.lastPos + 1
+      end
+
+      local s, e = hay:find(needle, startAt, true)
+      if not s then
+        if startAt > 1 then
+          -- wrap
+          s, e = hay:find(needle, 1, true)
+        end
+      end
+
+      if not s then
+        safeSetText(scriptStatus, "Not found: " .. q)
+        scriptSearchState.query = needle
+        scriptSearchState.lastPos = 0
+        return
+      end
+
+      scriptSearchState.query = needle
+      scriptSearchState.lastPos = e
+      safeSetText(scriptStatus, "Found (pos " .. tostring(s) .. ").")
+      tryHighlightMatch(s, e)
+    end
+
+    if scriptFind then scriptFind.onClick = function() doFind(true) end end
+    if scriptNext then scriptNext.onClick = function() doFind(false) end end
+
+    dtWindow._dtScriptFind = function(query, reset)
+      if scriptSearch and scriptSearch.setText and type(query) == "string" then
+        scriptSearch:setText(query)
+      end
+      doFind(reset ~= false)
+    end
+  end
+
+  -- Hotkey binding helper: Set / Clear
+  local function bindHotkeyRow(actionKey, keyId, setId, clearId)
     local keyWidget = dtResolve(dtWindow, keyId)
     local setButton = dtResolve(dtWindow, setId)
+    local clearButton = dtResolve(dtWindow, clearId)
+
     if keyWidget then
-      keyWidget.onTextChange = function(_, text) setHotkey(actionKey, text) end
+      keyWidget.onTextChange = function(widget, text)
+        if dtRefreshing then return end
+        local normalized = serializeHotkeyList(parseHotkeyList(text), ";")
+        cfg.hk[actionKey] = normalized
+      end
     end
+
+    local function startCapture()
+      HK_CAPTURE = { action = actionKey }
+      safeSetText(keyWidget, "Press...")
+    end
+
     if setButton then
-      setButton.onClick = function()
-        HK_WAITING_FOR = actionKey
-        safeSetText(keyWidget, "Press...")
+      setButton.onClick = function() startCapture() end
+    end
+    if clearButton then
+      clearButton.onClick = function()
+        clearHotkeys(actionKey)
+        dtRefresh()
       end
     end
   end
 
-  bindHotkeyRow("ueNonSafe", "ueNonSafeKey", "ueNonSafeSet")
-  bindHotkeyRow("ueSafe", "ueSafeKey", "ueSafeSet")
-  bindHotkeyRow("superSd", "superSdKey", "superSdSet")
-  bindHotkeyRow("superSdFire", "superSdFireKey", "superSdFireSet")
-  bindHotkeyRow("superSdHoly", "superSdHolyKey", "superSdHolySet")
-  bindHotkeyRow("sioVip", "sioVipKey", "sioVipSet")
+  bindHotkeyRow("caveToggle", "caveToggleKey", "caveToggleSet", "caveToggleClear")
+  bindHotkeyRow("targetToggle", "targetToggleKey", "targetToggleSet", "targetToggleClear")
+  bindHotkeyRow("ueNonSafe", "ueNonSafeKey", "ueNonSafeSet", "ueNonSafeClear")
+  bindHotkeyRow("ueSafe", "ueSafeKey", "ueSafeSet", "ueSafeClear")
+  bindHotkeyRow("superSd", "superSdKey", "superSdSet", "superSdClear")
+  bindHotkeyRow("superSdFire", "superSdFireKey", "superSdFireSet", "superSdFireClear")
+  bindHotkeyRow("superSdHoly", "superSdHolyKey", "superSdHolySet", "superSdHolyClear")
+  bindHotkeyRow("sioVip", "sioVipKey", "sioVipSet", "sioVipClear")
+  bindHotkeyRow("followToggle", "followToggleKey", "followToggleSet", "followToggleClear")
 
   dtShowPage("pageMenu")
   dtRefresh()
   return true
 end
 
-local function dtOpen()
+dtOpen = function()
   if not dtEnsureWindow() then
     schedule(200, function() dtOpen() end)
     return
@@ -475,21 +1026,7 @@ onStaticText(function(_, text)
   end
 end)
 
--- Stop cave/target hotkey
-onKeyDown(function(keys)
-  if chatTyping() then return end
-  if not isEnabled() then return end
-  if keys ~= (cfg.stopKey or "") then return end
-
-  if not CaveBot or not TargetBot then return end
-  if (CaveBot.isOn and CaveBot.isOn()) or (TargetBot.isOn and TargetBot.isOn()) then
-    if CaveBot.setOff then CaveBot.setOff() end
-    if TargetBot.setOff then TargetBot.setOff() end
-  else
-    if CaveBot.setOn then CaveBot.setOn() end
-    if TargetBot.setOn then TargetBot.setOn() end
-  end
-end)
+-- Stop CaveBot / TargetBot hotkeys (handled in the main onKeyDown at bottom)
 
 -- Anti Paralyze
 macro(100, function()
@@ -763,55 +1300,286 @@ end)
 sioVipMacro.setOn(false)
 
 -- Icons (required)
-addIcon("dt_UE_NonSafe_Icon", { item = 3161, text = "UE\nNS" }, function(_, isOn)
-  if not isEnabled() then ueNonSafe.setOn(false) return end
-  ueNonSafe.setOn(isOn)
+local iconUeNonSafe = addIcon("dt_UE_NonSafe_Icon", { item = 3161, text = "UE\nNS" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  if (not isEnabled()) or dtIsActionDisabled("ueNonSafe") then
+    if icon and icon.setOn then
+      icon._dtSuppress = true
+      pcall(icon.setOn, icon, false)
+      schedule(0, function() if icon then icon._dtSuppress = nil end end)
+    end
+    dtSetActionOn("ueNonSafe", false, "icon")
+    return
+  end
+  dtSetActionOn("ueNonSafe", isOn, "icon")
 end)
 
-addIcon("dt_UE_Safe_Icon", { item = 3161, text = "UE\nSAFE" }, function(_, isOn)
-  if not isEnabled() then ueSafe.setOn(false) return end
-  ueSafe.setOn(isOn)
+local iconUeSafe = addIcon("dt_UE_Safe_Icon", { item = 3161, text = "UE\nSAFE" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  if (not isEnabled()) or dtIsActionDisabled("ueSafe") then
+    if icon and icon.setOn then
+      icon._dtSuppress = true
+      pcall(icon.setOn, icon, false)
+      schedule(0, function() if icon then icon._dtSuppress = nil end end)
+    end
+    dtSetActionOn("ueSafe", false, "icon")
+    return
+  end
+  dtSetActionOn("ueSafe", isOn, "icon")
 end)
 
-addIcon("dt_SuperSD_Icon", { item = SD_RUNE_ID, text = "SD" }, function(_, isOn)
-  if not isEnabled() then superSd.setOn(false) return end
-  superSd.setOn(isOn)
+local iconSuperSd = addIcon("dt_SuperSD_Icon", { item = SD_RUNE_ID, text = "SD" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  if (not isEnabled()) or dtIsActionDisabled("superSd") then
+    if icon and icon.setOn then
+      icon._dtSuppress = true
+      pcall(icon.setOn, icon, false)
+      schedule(0, function() if icon then icon._dtSuppress = nil end end)
+    end
+    dtSetActionOn("superSd", false, "icon")
+    return
+  end
+  dtSetActionOn("superSd", isOn, "icon")
 end)
 
-addIcon("dt_SuperSDFire_Icon", { item = SD_FIRE_RUNE_ID, text = "F-SD" }, function(_, isOn)
-  if not isEnabled() then superSdFire.setOn(false) return end
-  superSdFire.setOn(isOn)
+local iconSuperSdFire = addIcon("dt_SuperSDFire_Icon", { item = SD_FIRE_RUNE_ID, text = "F-SD" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  if (not isEnabled()) or dtIsActionDisabled("superSdFire") then
+    if icon and icon.setOn then
+      icon._dtSuppress = true
+      pcall(icon.setOn, icon, false)
+      schedule(0, function() if icon then icon._dtSuppress = nil end end)
+    end
+    dtSetActionOn("superSdFire", false, "icon")
+    return
+  end
+  dtSetActionOn("superSdFire", isOn, "icon")
 end)
 
-addIcon("dt_SuperSDHoly_Icon", { item = SD_HOLY_RUNE_ID, text = "H-SD" }, function(_, isOn)
-  if not isEnabled() then superSdHoly.setOn(false) return end
-  superSdHoly.setOn(isOn)
+local iconSuperSdHoly = addIcon("dt_SuperSDHoly_Icon", { item = SD_HOLY_RUNE_ID, text = "H-SD" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  if (not isEnabled()) or dtIsActionDisabled("superSdHoly") then
+    if icon and icon.setOn then
+      icon._dtSuppress = true
+      pcall(icon.setOn, icon, false)
+      schedule(0, function() if icon then icon._dtSuppress = nil end end)
+    end
+    dtSetActionOn("superSdHoly", false, "icon")
+    return
+  end
+  dtSetActionOn("superSdHoly", isOn, "icon")
 end)
 
-addIcon("dt_SioVIP_Icon", { item = 3160, text = "SIO" }, function(_, isOn)
-  if not isEnabled() then sioVipMacro.setOn(false) return end
-  sioVipMacro.setOn(isOn)
+local iconSioVip = addIcon("dt_SioVIP_Icon", { item = 3160, text = "SIO" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  if (not isEnabled()) or dtIsActionDisabled("sioVip") then
+    if icon and icon.setOn then
+      icon._dtSuppress = true
+      pcall(icon.setOn, icon, false)
+      schedule(0, function() if icon then icon._dtSuppress = nil end end)
+    end
+    dtSetActionOn("sioVip", false, "icon")
+    return
+  end
+  dtSetActionOn("sioVip", isOn, "icon")
 end)
+
+-- Register actions for hotkeys + context menu + sync.
+dtRegisterAction("ueNonSafe", {
+  label = "UE (NON-SAFE)",
+  macro = ueNonSafe,
+  icon = iconUeNonSafe,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "ueNonSafe = macro",
+  setupPage = "pageSpells",
+})
+dtRegisterAction("ueSafe", {
+  label = "UE (SAFE)",
+  macro = ueSafe,
+  icon = iconUeSafe,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "ueSafe = macro",
+  setupPage = "pageSpells",
+})
+dtRegisterAction("superSd", {
+  label = "Super SD",
+  macro = superSd,
+  icon = iconSuperSd,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "superSd = macro",
+})
+dtRegisterAction("superSdFire", {
+  label = "Super SD Fire",
+  macro = superSdFire,
+  icon = iconSuperSdFire,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "superSdFire = macro",
+})
+dtRegisterAction("superSdHoly", {
+  label = "Super Holy SD",
+  macro = superSdHoly,
+  icon = iconSuperSdHoly,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "superSdHoly = macro",
+})
+dtRegisterAction("sioVip", {
+  label = "Sio VIP",
+  macro = sioVipMacro,
+  icon = iconSioVip,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "sioVipMacro = macro",
+})
+
+-- Shift + RightClick on icon: per-action context menu (registry-driven)
+local DT_ACTION_UI = {
+  ueNonSafe = { keyId = "ueNonSafeKey" },
+  ueSafe = { keyId = "ueSafeKey" },
+  superSd = { keyId = "superSdKey" },
+  superSdFire = { keyId = "superSdFireKey" },
+  superSdHoly = { keyId = "superSdHolyKey" },
+  sioVip = { keyId = "sioVipKey" },
+  follow = { keyId = "followToggleKey" },
+}
+
+local function dtIsShiftDown()
+  if not g_keyboard then return false end
+  if g_keyboard.isShiftPressed then
+    local ok, v = pcall(g_keyboard.isShiftPressed)
+    if ok then return v == true end
+  end
+  if not g_keyboard.isKeyPressed then return false end
+  return g_keyboard.isKeyPressed("Shift") or g_keyboard.isKeyPressed("LShift") or g_keyboard.isKeyPressed("RShift")
+end
+
+local function dtStartHotkeyCapture(actionKey)
+  if not actionKey then return end
+  dtOpen()
+  dtShowPage("pageHotkeys")
+  HK_CAPTURE = { action = actionKey }
+  local ids = DT_ACTION_UI[actionKey]
+  local keyWidget = ids and dtResolve(dtWindow, ids.keyId) or nil
+  safeSetText(keyWidget, "Press...")
+end
+
+local function dtOpenScriptViewer(relPath, query)
+  dtOpen()
+  dtShowPage("pageScripts")
+  if dtWindow and dtWindow._dtLoadScript then
+    pcall(dtWindow._dtLoadScript, relPath or "scripts/druid_toolkit.lua")
+  end
+  if query and dtWindow and dtWindow._dtScriptFind then
+    schedule(50, function()
+      if dtWindow and dtWindow._dtScriptFind then pcall(dtWindow._dtScriptFind, query, true) end
+    end)
+  end
+end
+
+local function dtAttachIconContextMenu(actionKey)
+  local a = dtGetAction(actionKey)
+  if not a or not a.icon or a.icon._dtContextAttached then return end
+  a.icon._dtContextAttached = true
+
+  local orig = a.icon.onMouseRelease
+  a.icon.onMouseRelease = function(widget, mousePos, mouseButton)
+    if mouseButton == 2 and dtIsShiftDown() then
+      local menu = g_ui.createWidget("PopupMenu")
+      menu:setGameMenu(true)
+
+      menu:addOption("Toggle", function()
+        if not isEnabled() then return end
+        dtToggleAction(actionKey)
+      end, "")
+
+      if a.setupPage then
+        menu:addOption("Setup...", function()
+          dtOpen()
+          dtShowPage(a.setupPage)
+        end, "")
+      end
+
+      menu:addOption("Hotkey: Set", function() dtStartHotkeyCapture(actionKey) end, "")
+      menu:addOption("Hotkey: Clear", function()
+        clearHotkeys(actionKey)
+        dtRefresh()
+      end, "")
+
+      menu:addOption("Open Script", function()
+        dtOpenScriptViewer((a.script or "scripts/druid_toolkit.lua"), a.scriptQuery)
+      end, "")
+
+      -- Per-action hide/disable (hides icon from GUI; re-enable via Setup -> Icon Hotkeys -> Manage Icons)
+      if not dtIsActionDisabled(actionKey) then
+        menu:addOption("Disable Icon", function()
+          cfg.actionDisabled = cfg.actionDisabled or {}
+          cfg.actionDisabled[actionKey] = true
+          dtSetActionOn(actionKey, false, "system")
+          dtApplyActionDisabledVisual(actionKey)
+          dtRefresh()
+        end, "")
+      end
+
+      menu:display(mousePos)
+      return true
+    end
+
+    if orig then return orig(widget, mousePos, mouseButton) end
+    return false
+  end
+end
+
+for k, a in pairs(DT_ACTIONS) do
+  dtAttachIconContextMenu(k)
+  if a and a.icon then
+    dtUpdateHotkeyBadge(k)
+    dtApplyActionDisabledVisual(k)
+  end
+end
 
 -- Hotkey capture + toggles (chat-safe)
 onKeyDown(function(keys)
   if chatTyping() then return end
 
-  if HK_WAITING_FOR then
-    setHotkey(HK_WAITING_FOR, keys)
-    HK_WAITING_FOR = nil
+  if HK_CAPTURE and HK_CAPTURE.action then
+    setHotkeySet(HK_CAPTURE.action, keys)
+    HK_CAPTURE = nil
     dtRefresh()
     return
   end
 
   if not isEnabled() then return end
 
-  if keys == getHotkey("ueNonSafe") then toggleMacro(ueNonSafe) return end
-  if keys == getHotkey("ueSafe") then toggleMacro(ueSafe) return end
-  if keys == getHotkey("superSd") then toggleMacro(superSd) return end
-  if keys == getHotkey("superSdFire") then toggleMacro(superSdFire) return end
-  if keys == getHotkey("superSdHoly") then toggleMacro(superSdHoly) return end
-  if keys == getHotkey("sioVip") then toggleMacro(sioVipMacro) return end
+  -- CaveBot / TargetBot toggles (separate)
+  if hotkeyMatches("caveToggle", keys) and CaveBot then
+    if CaveBot.isOn and CaveBot.isOn() then
+      if CaveBot.setOff then CaveBot.setOff() end
+    else
+      if CaveBot.setOn then CaveBot.setOn() end
+    end
+    return
+  end
+  if hotkeyMatches("targetToggle", keys) and TargetBot then
+    if TargetBot.isOn and TargetBot.isOn() then
+      if TargetBot.setOff then TargetBot.setOff() end
+    else
+      if TargetBot.setOn then TargetBot.setOn() end
+    end
+    return
+  end
+
+  if hotkeyMatches("ueNonSafe", keys) then dtToggleAction("ueNonSafe") return end
+  if hotkeyMatches("ueSafe", keys) then dtToggleAction("ueSafe") return end
+  if hotkeyMatches("superSd", keys) then dtToggleAction("superSd") return end
+  if hotkeyMatches("superSdFire", keys) then dtToggleAction("superSdFire") return end
+  if hotkeyMatches("superSdHoly", keys) then dtToggleAction("superSdHoly") return end
+  if hotkeyMatches("sioVip", keys) then dtToggleAction("sioVip") return end
+  if hotkeyMatches("followToggle", keys) then
+    if dtGetAction("follow") then
+      dtToggleAction("follow")
+    elseif ultimateFollow then
+      toggleMacro(ultimateFollow)
+    end
+    return
+  end
 end)
 
 -- Follow (kept)
@@ -937,6 +1705,17 @@ local ultimateFollow = macro(50, function()
     end
   end
 end)
+
+-- Follow is hotkey-driven; keep it off by default.
+ultimateFollow.setOn(false)
+dtRegisterAction("follow", {
+  label = "Follow Leader",
+  macro = ultimateFollow,
+  icon = nil,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "ultimateFollow = macro",
+  setupPage = "pageGeneral",
+})
 
 onCreaturePositionChange(function(creature, newPos, oldPos)
   if not isEnabled() then return end
