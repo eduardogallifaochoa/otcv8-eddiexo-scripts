@@ -601,7 +601,7 @@ DruidToolkitSetupWindow < MainWindow
             TextEdit
               id: modAntiParalyzeKey
               anchors.left: prev.right
-              anchors.right: modAntiParalyzeSet.left
+              anchors.right: modAntiParalyzeOpen.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -625,6 +625,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modAntiParalyzeOpen
+              anchors.right: modAntiParalyzeSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModAutoHaste
             height: 28
@@ -646,7 +655,7 @@ DruidToolkitSetupWindow < MainWindow
             TextEdit
               id: modAutoHasteKey
               anchors.left: prev.right
-              anchors.right: modAutoHasteSet.left
+              anchors.right: modAutoHasteOpen.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -670,6 +679,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modAutoHasteOpen
+              anchors.right: modAutoHasteSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModAutoHeal
             height: 28
@@ -691,7 +709,7 @@ DruidToolkitSetupWindow < MainWindow
             TextEdit
               id: modAutoHealKey
               anchors.left: prev.right
-              anchors.right: modAutoHealSet.left
+              anchors.right: modAutoHealOpen.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -715,6 +733,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modAutoHealOpen
+              anchors.right: modAutoHealSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModRingSwap
             height: 28
@@ -732,11 +759,12 @@ DruidToolkitSetupWindow < MainWindow
               margin-left: 8
               width: 170
               text: Ring Swap (Immortal)
+              tooltip: Energy Ring ID = 3051 | Normal Ring ID = 3006.
 
             TextEdit
               id: modRingSwapKey
               anchors.left: prev.right
-              anchors.right: modRingSwapSet.left
+              anchors.right: modRingSwapOpen.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -760,6 +788,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modRingSwapOpen
+              anchors.right: modRingSwapSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModMagicWall
             height: 28
@@ -781,7 +818,7 @@ DruidToolkitSetupWindow < MainWindow
             TextEdit
               id: modMagicWallKey
               anchors.left: prev.right
-              anchors.right: modMagicWallSet.left
+              anchors.right: modMagicWallOpen.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -805,6 +842,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modMagicWallOpen
+              anchors.right: modMagicWallSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModManaPot
             height: 28
@@ -826,7 +872,7 @@ DruidToolkitSetupWindow < MainWindow
             TextEdit
               id: modManaPotKey
               anchors.left: prev.right
-              anchors.right: modManaPotSet.left
+              anchors.right: modManaPotOpen.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -850,6 +896,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modManaPotOpen
+              anchors.right: modManaPotSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModCutWg
             height: 28
@@ -871,7 +926,7 @@ DruidToolkitSetupWindow < MainWindow
             TextEdit
               id: modCutWgKey
               anchors.left: prev.right
-              anchors.right: modCutWgSet.left
+              anchors.right: modCutWgOpen.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -895,6 +950,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modCutWgOpen
+              anchors.right: modCutWgSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModStamina
             height: 28
@@ -916,7 +980,7 @@ DruidToolkitSetupWindow < MainWindow
             TextEdit
               id: modStaminaKey
               anchors.left: prev.right
-              anchors.right: modStaminaSet.left
+              anchors.right: modStaminaOpen.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -940,6 +1004,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modStaminaOpen
+              anchors.right: modStaminaSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModSpellwand
             height: 28
@@ -961,7 +1034,7 @@ DruidToolkitSetupWindow < MainWindow
             TextEdit
               id: modSpellwandKey
               anchors.left: prev.right
-              anchors.right: modSpellwandSet.left
+              anchors.right: modSpellwandOpen.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -984,6 +1057,15 @@ DruidToolkitSetupWindow < MainWindow
               width: 46
               height: 22
               text: Set
+
+            Button
+              id: modSpellwandOpen
+              anchors.right: modSpellwandSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
 
       Panel
         id: pageHotkeys
@@ -1662,6 +1744,8 @@ DruidToolkitSetupWindow < MainWindow
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         size: 55 21
+
+
 
 
 
