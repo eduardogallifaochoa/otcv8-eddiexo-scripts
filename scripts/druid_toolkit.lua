@@ -7,6 +7,13 @@
 local TAG = "[DruidToolkit] "
 local function log(msg) print(TAG .. tostring(msg)) end
 
+-- Must exist before any config migration uses it.
+local function _trim(s)
+  if type(s) ~= "string" then return "" end
+  return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+
 storage.druidToolkit = storage.druidToolkit or {}
 local cfg = storage.druidToolkit
 
@@ -113,11 +120,6 @@ local function toggleMacro(m)
   m.setOn(not m.isOn())
 end
 
-local function _trim(s)
-  if type(s) ~= "string" then return "" end
-  s = s:gsub("^%s+", ""):gsub("%s+$", "")
-  return s
-end
 
 local function _hkEq(a, b)
   return _trim(a):lower() == _trim(b):lower()
@@ -387,6 +389,16 @@ Panel
 
   if not ui then return nil end
   ui:setId("druid_toolkit_panel")
+
+  -- Some OTC builds do not expose children as direct fields; resolve explicitly.
+  local function _mainResolve(root, id)
+    if not root then return nil end
+    return root[id]
+      or (root.recursiveGetChildById and root:recursiveGetChildById(id))
+      or (root.getChildById and root:getChildById(id))
+  end
+  ui.title = _mainResolve(ui, "title") or ui.title
+  ui.setup = _mainResolve(ui, "setup") or ui.setup
   return ui
 end
 
