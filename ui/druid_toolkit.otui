@@ -321,6 +321,16 @@ DruidToolkitSetupWindow < MainWindow
               text: Stop CaveBot Key
               width: 170
 
+            Button
+              id: stopCaveHelp
+              anchors.right: stopCaveKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para pausar/reanudar CaveBot. Ejemplo: Pause o F10.
+
             TextEdit
               id: stopCaveKey
               anchors.right: parent.right
@@ -339,6 +349,16 @@ DruidToolkitSetupWindow < MainWindow
               text: Stop TargetBot Key
               width: 170
 
+            Button
+              id: stopTargetHelp
+              anchors.right: stopTargetKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para pausar/reanudar TargetBot. Ejemplo: Pause o F11.
+
             TextEdit
               id: stopTargetKey
               anchors.right: parent.right
@@ -356,6 +376,16 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               text: Follow Leader
               width: 170
+
+            Button
+              id: followLeaderHelp
+              anchors.right: followLeader.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Escribe el nombre exacto del lider a seguir. Ejemplo: Ada Wong.
 
             TextEdit
               id: followLeader
@@ -412,6 +442,16 @@ DruidToolkitSetupWindow < MainWindow
               text: UE Spell
               width: 170
 
+            Button
+              id: ueSpellHelp
+              anchors.right: ueSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Escribe el spell UE exacto. Ejemplo: exevo gran mas frigo.
+
             TextEdit
               id: ueSpell
               anchors.right: parent.right
@@ -440,7 +480,7 @@ DruidToolkitSetupWindow < MainWindow
               font: terminus-10px
               tooltip: Numero de veces que se casteara el UE por activacion.
 
-            Label
+            Button
               id: ueRepeatHelp
               anchors.right: ueRepeat.left
               anchors.verticalCenter: parent.verticalCenter
@@ -466,6 +506,16 @@ DruidToolkitSetupWindow < MainWindow
               text: Anti Paralyze
               width: 170
 
+            Button
+              id: antiParalyzeSpellHelp
+              anchors.right: antiParalyzeSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Spell para quitar paralyze cuando estas paralizado.
+
             TextEdit
               id: antiParalyzeSpell
               anchors.right: parent.right
@@ -484,6 +534,16 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               text: Auto Haste
               width: 170
+
+            Button
+              id: hasteSpellHelp
+              anchors.right: hasteSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Spell de haste cuando no tienes haste activo.
 
             TextEdit
               id: hasteSpell
@@ -504,6 +564,16 @@ DruidToolkitSetupWindow < MainWindow
               text: Auto Heal Spell
               width: 170
 
+            Button
+              id: healSpellHelp
+              anchors.right: healSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Spell de curacion que se usa cuando HP% <= Auto Heal %.
+
             TextEdit
               id: healSpell
               anchors.right: parent.right
@@ -522,6 +592,16 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               text: Auto Heal %
               width: 170
+
+            Button
+              id: healPercentHelp
+              anchors.right: healPercent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Porcentaje de HP para curar. Ejemplo: 95 = cura en 95% o menos.
 
             TextEdit
               id: healPercent
@@ -598,6 +678,16 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Anti Paralyze
 
+            Button
+              id: modAntiParalyzeHelp
+              anchors.right: modAntiParalyzeKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Anti Paralyze. Ejemplo: F1.
+
             TextEdit
               id: modAntiParalyzeKey
               anchors.left: prev.right
@@ -652,6 +742,16 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Auto Haste
 
+            Button
+              id: modAutoHasteHelp
+              anchors.right: modAutoHasteKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Auto Haste. Ejemplo: F2.
+
             TextEdit
               id: modAutoHasteKey
               anchors.left: prev.right
@@ -705,6 +805,16 @@ DruidToolkitSetupWindow < MainWindow
               margin-left: 8
               width: 170
               text: Auto Heal
+
+            Button
+              id: modAutoHealHelp
+              anchors.right: modAutoHealKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Auto Heal. Ejemplo: F3.
 
             TextEdit
               id: modAutoHealKey
@@ -761,6 +871,16 @@ DruidToolkitSetupWindow < MainWindow
               text: Ring Swap (Immortal)
               tooltip: Energy Ring ID = 3051 | Normal Ring ID = 3006.
 
+            Button
+              id: modRingSwapHelp
+              anchors.right: modRingSwapKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Ring Swap (Immortal).
+
             TextEdit
               id: modRingSwapKey
               anchors.left: prev.right
@@ -814,6 +934,16 @@ DruidToolkitSetupWindow < MainWindow
               margin-left: 8
               width: 170
               text: Magic Wall (Hold)
+
+            Button
+              id: modMagicWallHelp
+              anchors.right: modMagicWallKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Magic Wall Hold.
 
             TextEdit
               id: modMagicWallKey
@@ -869,6 +999,16 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Faster Mana Potting
 
+            Button
+              id: modManaPotHelp
+              anchors.right: modManaPotKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Faster Mana Potting.
+
             TextEdit
               id: modManaPotKey
               anchors.left: prev.right
@@ -922,6 +1062,16 @@ DruidToolkitSetupWindow < MainWindow
               margin-left: 8
               width: 170
               text: Auto Cut Wild Growth
+
+            Button
+              id: modCutWgHelp
+              anchors.right: modCutWgKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Auto Cut Wild Growth.
 
             TextEdit
               id: modCutWgKey
@@ -977,6 +1127,16 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Stamina Item
 
+            Button
+              id: modStaminaHelp
+              anchors.right: modStaminaKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Stamina Item.
+
             TextEdit
               id: modStaminaKey
               anchors.left: prev.right
@@ -1030,6 +1190,16 @@ DruidToolkitSetupWindow < MainWindow
               margin-left: 8
               width: 170
               text: Spellwand
+
+            Button
+              id: modSpellwandHelp
+              anchors.right: modSpellwandKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Spellwand.
 
             TextEdit
               id: modSpellwandKey
