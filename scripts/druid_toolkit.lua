@@ -1118,7 +1118,8 @@ end)
 -- Stop CaveBot / TargetBot hotkeys (handled in the main onKeyDown at bottom)
 
 -- Anti Paralyze
-local antiParalyzeMacro = macro(100, function()
+local antiParalyzeMacro
+antiParalyzeMacro = macro(100, function()
   if not isEnabled() then return end
   if antiParalyzeMacro.isOff() then return end
   if isParalyzed() and (cfg.antiParalyzeSpell or ""):len() > 0 then
@@ -1127,7 +1128,8 @@ local antiParalyzeMacro = macro(100, function()
 end)
 
 -- Auto Haste
-local autoHasteMacro = macro(500, function()
+local autoHasteMacro
+autoHasteMacro = macro(500, function()
   if not isEnabled() then return end
   if autoHasteMacro.isOff() then return end
   if not hasHaste() and (cfg.hasteSpell or ""):len() > 0 then
@@ -1136,7 +1138,8 @@ local autoHasteMacro = macro(500, function()
 end)
 
 -- Auto Heal
-local autoHealMacro = macro(50, function()
+local autoHealMacro
+autoHealMacro = macro(50, function()
   if not isEnabled() then return end
   if autoHealMacro.isOff() then return end
   local hpTrigger = tonumber(cfg.healPercent) or 95
@@ -1146,7 +1149,8 @@ local autoHealMacro = macro(50, function()
 end)
 
 -- Ring swap
-local ringSwapMacro = macro(100, function()
+local ringSwapMacro
+ringSwapMacro = macro(100, function()
   if not isEnabled() then return end
   if ringSwapMacro.isOff() then return end
   if hppercent() <= RING_PUT_AT_HP then
@@ -1167,7 +1171,8 @@ local function tablefind(tab, el)
   return nil
 end
 
-local holdMWMacro = macro(20, function()
+local holdMWMacro
+holdMWMacro = macro(20, function()
   if not isEnabled() then return end
   if holdMWMacro.isOff() then return end
   if #marked_tiles == 0 then return end
@@ -1241,7 +1246,8 @@ onKeyUp(function(keys)
 end)
 
 -- Faster mana potting
-local manaPotMacro = macro(200, function()
+local manaPotMacro
+manaPotMacro = macro(200, function()
   if not isEnabled() then return end
   if manaPotMacro.isOff() then return end
   if manapercent() <= MANA_MIN_PERCENT then
@@ -1265,7 +1271,8 @@ local function getNearTiles(p)
   return tiles
 end
 
-local cutWgMacro = macro(500, function()
+local cutWgMacro
+cutWgMacro = macro(500, function()
   if not isEnabled() then return end
   if cutWgMacro.isOff() then return end
   local tiles = getNearTiles(pos())
@@ -1280,7 +1287,8 @@ local cutWgMacro = macro(500, function()
 end)
 
 -- Stamina item
-local staminaMacro = macro(180000, function()
+local staminaMacro
+staminaMacro = macro(180000, function()
   if not isEnabled() then return end
   if staminaMacro.isOff() then return end
   use(11372)
@@ -1765,7 +1773,8 @@ end
 
 local function getStandTime() return now - standTime end
 
-local ultimateFollow = macro(50, function()
+local ultimateFollow
+ultimateFollow = macro(50, function()
   if not isEnabled() then return end
   if not cfg.followLeader or cfg.followLeader:len() == 0 then return end
 
@@ -1868,7 +1877,8 @@ onCreatureDisappear(function(creature)
 end)
 
 -- Spellwand
-local spellwandMacro = macro(1000, function()
+local spellwandMacro
+spellwandMacro = macro(1000, function()
   if not isEnabled() then return end
   if spellwandMacro.isOff() then return end
   for _, container in pairs(g_game.getContainers()) do
@@ -1967,3 +1977,4 @@ dtRegisterAction("spellwand", {
 })
 
 log("Loaded.")
+
