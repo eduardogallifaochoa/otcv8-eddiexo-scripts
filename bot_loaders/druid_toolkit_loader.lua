@@ -9,10 +9,30 @@ local function log(msg)
   print(LOADER_TAG .. tostring(msg))
 end
 
+local function hasToolkitPanel()
+  local root = g_ui and g_ui.getRootWidget and g_ui.getRootWidget() or nil
+  if not root then return false end
+  local w = nil
+  if root.recursiveGetChildById then
+    local ok, res = pcall(root.recursiveGetChildById, root, "druid_toolkit_panel")
+    if ok then w = res end
+  end
+  if (not w) and root.getChildById then
+    local ok, res = pcall(root.getChildById, root, "druid_toolkit_panel")
+    if ok then w = res end
+  end
+  return w ~= nil
+end
+
 -- In this bot sandbox, `_G` may be nil. Use plain globals instead.
 if __druid_toolkit_loaded then
-  log("Already loaded; skipping.")
-  return
+  if hasToolkitPanel() then
+    log("Already loaded; skipping.")
+    return
+  end
+  -- Stale flag (common after script reloads). Allow re-load.
+  log("Loaded flag was set but panel is missing. Reloading toolkit.")
+  __druid_toolkit_loaded = false
 end
 
 local function safeDofile(path)

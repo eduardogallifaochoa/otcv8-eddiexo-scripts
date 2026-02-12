@@ -39,6 +39,7 @@ cfg.healSpell = cfg.healSpell or "exura vita"
 cfg.healPercent = cfg.healPercent or 95
 
 cfg.followLeader = cfg.followLeader or "Name"
+cfg.bpMainId = tonumber(cfg.bpMainId) or 0
 
 cfg.hk = cfg.hk or {
   ueNonSafe = "F1",
@@ -50,12 +51,14 @@ cfg.hk = cfg.hk or {
   caveToggle = "",
   targetToggle = "",
   followToggle = (cfg.hk and cfg.hk.follow) or "F7",
+  openBpMin = "",
 }
 -- Migrate legacy follow key
 if cfg.hk.follow and (not cfg.hk.followToggle or _trim(cfg.hk.followToggle) == "") then
   cfg.hk.followToggle = cfg.hk.follow
 end
 cfg.hk.follow = nil
+if cfg.hk.openBpMin == nil then cfg.hk.openBpMin = "" end
 
 -- Migrate legacy stop keys (from General page text edits) into hotkey list if empty.
 if (not cfg.hk.caveToggle or _trim(cfg.hk.caveToggle) == "") and _trim(cfg.stopCaveKey or ""):len() > 0 then
@@ -79,6 +82,7 @@ modDefault("manaPot", true)
 modDefault("cutWg", true)
 modDefault("stamina", true)
 modDefault("spellwand", false) -- safer default: OFF
+modDefault("openBpMin", false)
 
 --==============================================================
 -- Helpers
@@ -412,6 +416,7 @@ local HK_CAPTURE = nil
 -- Forward declaration (used by icon context menu)
 local dtOpen = nil
 local dtRefreshing = false
+local dtCurrentPage = "pageMenu"
 
 local function dtResolve(win, id)
   if not win then return nil end
@@ -422,6 +427,7 @@ end
 
 local function dtShowPage(pageId)
   if not dtWindow then return end
+  dtCurrentPage = pageId
   local pages = { "pageMenu", "pageGeneral", "pageSpells", "pageModules", "pageHotkeys", "pageScripts", "pageAbout" }
   for _, id in ipairs(pages) do
     local p = dtResolve(dtWindow, id)
@@ -448,6 +454,23 @@ local function dtShowPage(pageId)
       if b.setColor then pcall(b.setColor, b, active and "#ffffff" or "#e6e6e6") end
     end
   end
+end
+
+local function dtIsSetupVisible()
+  if not dtWindow or not dtWindow.isVisible then return false end
+  local ok, v = pcall(dtWindow.isVisible, dtWindow)
+  return ok and v == true
+end
+
+local function dtIsScriptsPageVisible()
+  if not dtIsSetupVisible() then return false end
+  if dtCurrentPage == "pageScripts" then return true end
+  local pageScripts = dtResolve(dtWindow, "pageScripts")
+  if pageScripts and pageScripts.isVisible then
+    local ok, v = pcall(pageScripts.isVisible, pageScripts)
+    if ok and v == true then return true end
+  end
+  return false
 end
 
 local function getBotConfigName()
@@ -492,6 +515,7 @@ local function dtRefresh()
   safeSetText(dtResolve(dtWindow, "stopCaveKey"), getHotkeyDisplay("caveToggle"))
   safeSetText(dtResolve(dtWindow, "stopTargetKey"), getHotkeyDisplay("targetToggle"))
   safeSetText(dtResolve(dtWindow, "followLeader"), cfg.followLeader or "")
+  safeSetText(dtResolve(dtWindow, "bpMainId"), tostring(tonumber(cfg.bpMainId) or 0))
 
   safeSetText(dtResolve(dtWindow, "ueSpell"), cfg.ueSpell or "")
   safeSetText(dtResolve(dtWindow, "ueRepeat"), tostring(cfg.ueRepeat or 4))
@@ -520,6 +544,7 @@ local function dtRefresh()
   safeSetOn(dtResolve(dtWindow, "modCutWgSwitch"), cfg.mods and cfg.mods.cutWg == true)
   safeSetOn(dtResolve(dtWindow, "modStaminaSwitch"), cfg.mods and cfg.mods.stamina == true)
   safeSetOn(dtResolve(dtWindow, "modSpellwandSwitch"), cfg.mods and cfg.mods.spellwand == true)
+  safeSetOn(dtResolve(dtWindow, "modOpenBpMinSwitch"), cfg.mods and cfg.mods.openBpMin == true)
 
   safeSetText(dtResolve(dtWindow, "modAntiParalyzeKey"), getHotkeyDisplay("antiParalyze"))
   safeSetText(dtResolve(dtWindow, "modAutoHasteKey"), getHotkeyDisplay("autoHaste"))
@@ -530,6 +555,7 @@ local function dtRefresh()
   safeSetText(dtResolve(dtWindow, "modCutWgKey"), getHotkeyDisplay("cutWg"))
   safeSetText(dtResolve(dtWindow, "modStaminaKey"), getHotkeyDisplay("stamina"))
   safeSetText(dtResolve(dtWindow, "modSpellwandKey"), getHotkeyDisplay("spellwand"))
+  safeSetText(dtResolve(dtWindow, "modOpenBpMinKey"), getHotkeyDisplay("openBpMin"))
 
   -- Keep icon hotkey badges + disabled visuals in sync.
   for k, a in pairs(DT_ACTIONS) do
@@ -752,6 +778,14 @@ local function dtEnsureWindow()
     end
   end
 
+  local bpMainId = dtResolve(dtWindow, "bpMainId")
+  if bpMainId then
+    bpMainId.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      cfg.bpMainId = tonumber(text) or 0
+    end
+  end
+
   -- Spells bindings
   local ueSpell = dtResolve(dtWindow, "ueSpell")
   if ueSpell then
@@ -823,11 +857,13 @@ local function dtEnsureWindow()
   bindModuleSwitch("cutWg", "modCutWgSwitch")
   bindModuleSwitch("stamina", "modStaminaSwitch")
   bindModuleSwitch("spellwand", "modSpellwandSwitch")
+  bindModuleSwitch("openBpMin", "modOpenBpMinSwitch")
 
-  -- Scripts viewer (read-only)
+  -- Scripts viewer/editor
   do
     local scriptFile = dtResolve(dtWindow, "scriptFile")
     local scriptLoad = dtResolve(dtWindow, "scriptLoad")
+    local scriptSave = dtResolve(dtWindow, "scriptSave")
     local scriptContent = dtResolve(dtWindow, "scriptContent")
     local scriptScrollbar = dtResolve(dtWindow, "scriptScrollbar")
     local scriptSearch = dtResolve(dtWindow, "scriptSearch")
@@ -865,7 +901,7 @@ local function dtEnsureWindow()
     end
 
     if scriptContent and scriptContent.setEditable then
-      pcall(function() scriptContent:setEditable(false) end)
+      pcall(function() scriptContent:setEditable(true) end)
     end
 
     local function toResourcePath(rel)
@@ -895,6 +931,20 @@ local function dtEnsureWindow()
       return nil, "unable to read"
     end
 
+    local function writeResource(path, data)
+      if not path then return false, "missing path" end
+      data = type(data) == "string" and data or ""
+      if g_resources and g_resources.writeFileContents then
+        local ok = pcall(g_resources.writeFileContents, path, data)
+        if ok then return true end
+      end
+      if writeFileContents then
+        local ok = pcall(writeFileContents, path, data)
+        if ok then return true end
+      end
+      return false, "unable to write"
+    end
+
     local function loadNow()
       if not scriptContent or not scriptContent.setText then return end
       local rel = scriptFile and scriptFile.getText and scriptFile:getText() or "scripts/druid_toolkit.lua"
@@ -908,10 +958,24 @@ local function dtEnsureWindow()
       scriptContent:setText(data)
       syncScriptScrollbar()
       scriptSearchState.lastPos = 0
-      safeSetText(scriptStatus, "")
+      safeSetText(scriptStatus, "Loaded: " .. tostring(rel))
+    end
+
+    local function saveNow()
+      if not scriptContent or not scriptContent.getText then return end
+      local rel = scriptFile and scriptFile.getText and scriptFile:getText() or "scripts/druid_toolkit.lua"
+      local res = toResourcePath(rel)
+      local text = scriptContent:getText() or ""
+      local ok, err = writeResource(res, text)
+      if not ok then
+        safeSetText(scriptStatus, "Save failed: " .. tostring(err))
+        return
+      end
+      safeSetText(scriptStatus, "Saved: " .. tostring(rel))
     end
 
     if scriptLoad then scriptLoad.onClick = loadNow end
+    if scriptSave then scriptSave.onClick = saveNow end
     -- Expose for icon context menu (safe no-op if widgets aren't available).
     dtWindow._dtLoadScript = function(rel)
       if scriptFile and scriptFile.setText and type(rel) == "string" then
@@ -919,6 +983,7 @@ local function dtEnsureWindow()
       end
       loadNow()
     end
+    dtWindow._dtSaveScript = saveNow
 
     local function tryHighlightMatch(s, e)
       if not scriptContent then return end
@@ -983,6 +1048,35 @@ local function dtEnsureWindow()
       doFind(reset ~= false)
     end
   end
+  -- Modules: Open Script buttons (jump to exact macro block)
+  local function bindModuleOpen(openId, query)
+    local openBtn = dtResolve(dtWindow, openId)
+    if not openBtn then return end
+    openBtn.onClick = function()
+      dtShowPage("pageScripts")
+      if dtWindow and dtWindow._dtLoadScript then
+        pcall(dtWindow._dtLoadScript, "scripts/druid_toolkit.lua")
+      end
+      if query and dtWindow and dtWindow._dtScriptFind then
+        schedule(40, function()
+          if dtWindow and dtWindow._dtScriptFind then
+            pcall(dtWindow._dtScriptFind, query, true)
+          end
+        end)
+      end
+    end
+  end
+
+  bindModuleOpen("modAntiParalyzeOpen", "antiParalyzeMacro = macro")
+  bindModuleOpen("modAutoHasteOpen", "autoHasteMacro = macro")
+  bindModuleOpen("modAutoHealOpen", "autoHealMacro = macro")
+  bindModuleOpen("modRingSwapOpen", "ringSwapMacro = macro")
+  bindModuleOpen("modMagicWallOpen", "holdMWMacro = macro")
+  bindModuleOpen("modManaPotOpen", "manaPotMacro = macro")
+  bindModuleOpen("modCutWgOpen", "cutWgMacro = macro")
+  bindModuleOpen("modStaminaOpen", "staminaMacro = macro")
+  bindModuleOpen("modSpellwandOpen", "spellwandMacro = macro")
+  bindModuleOpen("modOpenBpMinOpen", "openBpMinMacro = macro")
 
   -- Hotkey binding helper: Set / Clear
   local function bindHotkeyRow(actionKey, keyId, setId, clearId)
@@ -1025,6 +1119,7 @@ local function dtEnsureWindow()
   bindHotkeyRow("cutWg", "modCutWgKey", "modCutWgSet", "modCutWgClear")
   bindHotkeyRow("stamina", "modStaminaKey", "modStaminaSet", "modStaminaClear")
   bindHotkeyRow("spellwand", "modSpellwandKey", "modSpellwandSet", "modSpellwandClear")
+  bindHotkeyRow("openBpMin", "modOpenBpMinKey", "modOpenBpMinSet", "modOpenBpMinClear")
   bindHotkeyRow("ueNonSafe", "ueNonSafeKey", "ueNonSafeSet", "ueNonSafeClear")
   bindHotkeyRow("ueSafe", "ueSafeKey", "ueSafeSet", "ueSafeClear")
   bindHotkeyRow("superSd", "superSdKey", "superSdSet", "superSdClear")
@@ -1049,22 +1144,54 @@ dtOpen = function()
   dtWindow:focus()
 end
 
--- Build the Main row UI now
-mainUi = setupMainRow()
-if mainUi and mainUi.title then
-  mainUi.title:setOn(isEnabled())
-  mainUi.title.onClick = function(widget)
-    cfg.enabled = not isEnabled()
-    widget:setOn(isEnabled())
-    dtApplyEnabledState()
+local function dtBindMainUi(ui)
+  if not ui then return false end
+  if ui.title and ui.title.setOn then
+    ui.title:setOn(isEnabled())
+    ui.title.onClick = function(widget)
+      cfg.enabled = not isEnabled()
+      if widget and widget.setOn then widget:setOn(isEnabled()) end
+      dtApplyEnabledState()
+    end
   end
-end
-if mainUi and mainUi.setup then
-  mainUi.setup.onClick = function()
-    dtOpen()
+  if ui.setup then
+    ui.setup.onClick = function() dtOpen() end
   end
+  return ui.title ~= nil and ui.setup ~= nil
 end
 
+local function dtMainUiAlive()
+  if not mainUi then return false end
+  if mainUi.getParent then
+    local ok, parent = pcall(mainUi.getParent, mainUi)
+    return ok and parent ~= nil
+  end
+  return true
+end
+
+local function dtEnsureMainUi(tryN)
+  if dtMainUiAlive() then
+    dtBindMainUi(mainUi)
+    return true
+  end
+
+  mainUi = setupMainRow()
+  if mainUi then
+    dtBindMainUi(mainUi)
+    if dtMainUiAlive() then return true end
+  end
+
+  tryN = (tonumber(tryN) or 0) + 1
+  if tryN <= 25 then
+    schedule(200, function() dtEnsureMainUi(tryN) end)
+  else
+    log("Main row not ready after retries (will be created on next reload).")
+  end
+  return false
+end
+
+-- Build the Main row UI with retries (some clients initialize Main tab slightly later).
+dtEnsureMainUi(0)
 --==============================================================
 -- Features
 --==============================================================
@@ -1118,7 +1245,8 @@ end)
 -- Stop CaveBot / TargetBot hotkeys (handled in the main onKeyDown at bottom)
 
 -- Anti Paralyze
-local antiParalyzeMacro = macro(100, function()
+local antiParalyzeMacro
+antiParalyzeMacro = macro(100, function()
   if not isEnabled() then return end
   if antiParalyzeMacro.isOff() then return end
   if isParalyzed() and (cfg.antiParalyzeSpell or ""):len() > 0 then
@@ -1127,7 +1255,8 @@ local antiParalyzeMacro = macro(100, function()
 end)
 
 -- Auto Haste
-local autoHasteMacro = macro(500, function()
+local autoHasteMacro
+autoHasteMacro = macro(500, function()
   if not isEnabled() then return end
   if autoHasteMacro.isOff() then return end
   if not hasHaste() and (cfg.hasteSpell or ""):len() > 0 then
@@ -1136,7 +1265,8 @@ local autoHasteMacro = macro(500, function()
 end)
 
 -- Auto Heal
-local autoHealMacro = macro(50, function()
+local autoHealMacro
+autoHealMacro = macro(50, function()
   if not isEnabled() then return end
   if autoHealMacro.isOff() then return end
   local hpTrigger = tonumber(cfg.healPercent) or 95
@@ -1146,7 +1276,8 @@ local autoHealMacro = macro(50, function()
 end)
 
 -- Ring swap
-local ringSwapMacro = macro(100, function()
+local ringSwapMacro
+ringSwapMacro = macro(100, function()
   if not isEnabled() then return end
   if ringSwapMacro.isOff() then return end
   if hppercent() <= RING_PUT_AT_HP then
@@ -1167,7 +1298,8 @@ local function tablefind(tab, el)
   return nil
 end
 
-local holdMWMacro = macro(20, function()
+local holdMWMacro
+holdMWMacro = macro(20, function()
   if not isEnabled() then return end
   if holdMWMacro.isOff() then return end
   if #marked_tiles == 0 then return end
@@ -1204,12 +1336,14 @@ local resetTiles = false
 
 onKeyDown(function(keys)
   if chatTyping() then return end
+  if dtIsScriptsPageVisible() then return end
   if not isEnabled() then return end
   if keys == MW_MARK_KEY and resetTimer == 0 then resetTimer = now end
 end)
 
 onKeyPress(function(keys)
   if chatTyping() then return end
+  if dtIsScriptsPageVisible() then return end
   if not isEnabled() then return end
 
   if keys == MW_MARK_KEY and (now - resetTimer) > 2500 then
@@ -1225,6 +1359,7 @@ end)
 
 onKeyUp(function(keys)
   if chatTyping() then return end
+  if dtIsScriptsPageVisible() then return end
   if not isEnabled() then return end
   if keys ~= MW_MARK_KEY or resetTiles then return end
 
@@ -1241,7 +1376,8 @@ onKeyUp(function(keys)
 end)
 
 -- Faster mana potting
-local manaPotMacro = macro(200, function()
+local manaPotMacro
+manaPotMacro = macro(200, function()
   if not isEnabled() then return end
   if manaPotMacro.isOff() then return end
   if manapercent() <= MANA_MIN_PERCENT then
@@ -1265,7 +1401,8 @@ local function getNearTiles(p)
   return tiles
 end
 
-local cutWgMacro = macro(500, function()
+local cutWgMacro
+cutWgMacro = macro(500, function()
   if not isEnabled() then return end
   if cutWgMacro.isOff() then return end
   local tiles = getNearTiles(pos())
@@ -1280,7 +1417,8 @@ local cutWgMacro = macro(500, function()
 end)
 
 -- Stamina item
-local staminaMacro = macro(180000, function()
+local staminaMacro
+staminaMacro = macro(180000, function()
   if not isEnabled() then return end
   if staminaMacro.isOff() then return end
   use(11372)
@@ -1619,6 +1757,7 @@ end
 -- Hotkey capture + toggles (chat-safe)
 onKeyDown(function(keys)
   if chatTyping() then return end
+  if dtIsScriptsPageVisible() and not (HK_CAPTURE and HK_CAPTURE.action) then return end
 
   if HK_CAPTURE and HK_CAPTURE.action then
     setHotkeySet(HK_CAPTURE.action, keys)
@@ -1657,6 +1796,7 @@ onKeyDown(function(keys)
   if hotkeyMatches("cutWg", keys) then dtToggleAction("cutWg") return end
   if hotkeyMatches("stamina", keys) then dtToggleAction("stamina") return end
   if hotkeyMatches("spellwand", keys) then dtToggleAction("spellwand") return end
+  if hotkeyMatches("openBpMin", keys) then dtToggleAction("openBpMin") return end
 
   if hotkeyMatches("ueNonSafe", keys) then dtToggleAction("ueNonSafe") return end
   if hotkeyMatches("ueSafe", keys) then dtToggleAction("ueSafe") return end
@@ -1765,7 +1905,8 @@ end
 
 local function getStandTime() return now - standTime end
 
-local ultimateFollow = macro(50, function()
+local ultimateFollow
+ultimateFollow = macro(50, function()
   if not isEnabled() then return end
   if not cfg.followLeader or cfg.followLeader:len() == 0 then return end
 
@@ -1867,13 +2008,100 @@ onCreatureDisappear(function(creature)
   end
 end)
 
+-- Open backpack minimized
+local function dtFindContainerByItemId(itemId)
+  if not itemId then return nil end
+  for _, container in pairs(g_game.getContainers()) do
+    local cItem = container:getContainerItem()
+    if cItem and cItem:getId() == itemId then
+      return container
+    end
+  end
+  return nil
+end
+
+local function dtResolveMainBackpackId()
+  local cfgId = tonumber(cfg.bpMainId) or 0
+  if cfgId > 0 then return cfgId end
+  if getBack then
+    local back = getBack()
+    if back and back.getId then
+      return back:getId()
+    end
+  end
+  return nil
+end
+
+local function dtTryOpenContainerById(itemId)
+  if not itemId then return false end
+  if getBack then
+    local back = getBack()
+    if back and back:getId() == itemId then
+      g_game.open(back)
+      return true
+    end
+  end
+  for _, container in pairs(g_game.getContainers()) do
+    for _, item in ipairs(container:getItems()) do
+      if item.isContainer and item:isContainer() and item:getId() == itemId then
+        g_game.open(item)
+        return true
+      end
+    end
+  end
+  return false
+end
+
+local function dtMinimizeContainer(container)
+  if not container or not container.window then return end
+  local w = container.window
+  if w.minimize then
+    pcall(w.minimize, w)
+  elseif w.setContentHeight then
+    pcall(w.setContentHeight, w, 34)
+  end
+end
+
+local openBpMinMacro
+openBpMinMacro = macro(1200, function()
+  if not isEnabled() then return end
+  if openBpMinMacro.isOff() then return end
+  if not g_game.isOnline() then return end
+
+  local mainBpId = dtResolveMainBackpackId()
+  if not mainBpId then return end
+
+  local opened = dtFindContainerByItemId(mainBpId)
+  if opened then
+    dtMinimizeContainer(opened)
+    return
+  end
+
+  dtTryOpenContainerById(mainBpId)
+end)
+
+onContainerOpen(function(container, previousContainer)
+  if not isEnabled() then return end
+  if not openBpMinMacro or openBpMinMacro.isOff() then return end
+  local mainBpId = dtResolveMainBackpackId()
+  if not mainBpId then return end
+  if not container or not container.getContainerItem then return end
+  local cItem = container:getContainerItem()
+  if not cItem or cItem:getId() ~= mainBpId then return end
+  schedule(50, function()
+    dtMinimizeContainer(container)
+  end)
+end)
+
 -- Spellwand
-local spellwandMacro = macro(1000, function()
+local spellwandMacro
+spellwandMacro = macro(1000, function()
   if not isEnabled() then return end
   if spellwandMacro.isOff() then return end
   for _, container in pairs(g_game.getContainers()) do
     for _, item in ipairs(container:getItems()) do
-      if table.contains(SPELLWAND_ITEMLIST, item:getId()) then
+      local itemIsContainer = item.isContainer and item:isContainer()
+      if (not itemIsContainer) and table.contains(SPELLWAND_ITEMLIST, item:getId()) then
         useWith(SPELLWAND_ID, item)
         return
       end
@@ -1891,6 +2119,7 @@ manaPotMacro.setOn(cfg.mods.manaPot == true)
 cutWgMacro.setOn(cfg.mods.cutWg == true)
 staminaMacro.setOn(cfg.mods.stamina == true)
 spellwandMacro.setOn(cfg.mods.spellwand == true)
+openBpMinMacro.setOn(cfg.mods.openBpMin == true)
 
 -- Register module actions (UI + hotkeys; persisted)
 dtRegisterAction("antiParalyze", {
@@ -1965,5 +2194,15 @@ dtRegisterAction("spellwand", {
   scriptQuery = "spellwandMacro = macro",
   setupPage = "pageModules",
 })
+dtRegisterAction("openBpMin", {
+  label = "Open BP Minimized",
+  macro = openBpMinMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "openBpMinMacro = macro",
+  setupPage = "pageModules",
+})
 
 log("Loaded.")
+
+

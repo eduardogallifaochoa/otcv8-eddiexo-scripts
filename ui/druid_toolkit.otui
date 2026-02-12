@@ -321,6 +321,16 @@ DruidToolkitSetupWindow < MainWindow
               text: Stop CaveBot Key
               width: 170
 
+            Button
+              id: stopCaveHelp
+              anchors.right: stopCaveKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para pausar/reanudar CaveBot. Ejemplo: Pause o F10.
+
             TextEdit
               id: stopCaveKey
               anchors.right: parent.right
@@ -338,6 +348,16 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               text: Stop TargetBot Key
               width: 170
+
+            Button
+              id: stopTargetHelp
+              anchors.right: stopTargetKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para pausar/reanudar TargetBot. Ejemplo: Pause o F11.
 
             TextEdit
               id: stopTargetKey
@@ -357,6 +377,16 @@ DruidToolkitSetupWindow < MainWindow
               text: Follow Leader
               width: 170
 
+            Button
+              id: followLeaderHelp
+              anchors.right: followLeader.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Escribe el nombre exacto del lider a seguir. Ejemplo: Ada Wong.
+
             TextEdit
               id: followLeader
               anchors.right: parent.right
@@ -364,6 +394,35 @@ DruidToolkitSetupWindow < MainWindow
               width: 220
               height: 20
               tooltip: Nombre del player a seguir (Follow macro).
+
+          Panel
+            id: rowBpMainId
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Backpack Main ID
+              width: 170
+
+            Button
+              id: bpMainIdHelp
+              anchors.right: bpMainId.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: ID de la backpack principal para Open BP Minimized. 0 = usar backpack equipada.
+
+            TextEdit
+              id: bpMainId
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 140
+              height: 20
+              text: 0
+              tooltip: Ejemplo: 2865. Si dejas 0, usa la backpack del slot back.
 
       Panel
         id: pageSpells
@@ -412,6 +471,16 @@ DruidToolkitSetupWindow < MainWindow
               text: UE Spell
               width: 170
 
+            Button
+              id: ueSpellHelp
+              anchors.right: ueSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Escribe el spell UE exacto. Ejemplo: exevo gran mas frigo.
+
             TextEdit
               id: ueSpell
               anchors.right: parent.right
@@ -440,7 +509,7 @@ DruidToolkitSetupWindow < MainWindow
               font: terminus-10px
               tooltip: Numero de veces que se casteara el UE por activacion.
 
-            Label
+            Button
               id: ueRepeatHelp
               anchors.right: ueRepeat.left
               anchors.verticalCenter: parent.verticalCenter
@@ -466,6 +535,16 @@ DruidToolkitSetupWindow < MainWindow
               text: Anti Paralyze
               width: 170
 
+            Button
+              id: antiParalyzeSpellHelp
+              anchors.right: antiParalyzeSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Spell para quitar paralyze cuando estas paralizado.
+
             TextEdit
               id: antiParalyzeSpell
               anchors.right: parent.right
@@ -484,6 +563,16 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               text: Auto Haste
               width: 170
+
+            Button
+              id: hasteSpellHelp
+              anchors.right: hasteSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Spell de haste cuando no tienes haste activo.
 
             TextEdit
               id: hasteSpell
@@ -504,6 +593,16 @@ DruidToolkitSetupWindow < MainWindow
               text: Auto Heal Spell
               width: 170
 
+            Button
+              id: healSpellHelp
+              anchors.right: healSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Spell de curacion que se usa cuando HP% <= Auto Heal %.
+
             TextEdit
               id: healSpell
               anchors.right: parent.right
@@ -522,6 +621,16 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               text: Auto Heal %
               width: 170
+
+            Button
+              id: healPercentHelp
+              anchors.right: healPercent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Porcentaje de HP para curar. Ejemplo: 95 = cura en 95% o menos.
 
             TextEdit
               id: healPercent
@@ -598,13 +707,23 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Anti Paralyze
 
+            Button
+              id: modAntiParalyzeHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Anti Paralyze. Ejemplo: F1.
+
             TextEdit
               id: modAntiParalyzeKey
               anchors.left: prev.right
-              anchors.right: modAntiParalyzeSet.left
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
-              margin-right: 8
+              margin-right: 169
               height: 22
               font: terminus-10px
 
@@ -625,6 +744,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modAntiParalyzeOpen
+              anchors.right: modAntiParalyzeSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModAutoHaste
             height: 28
@@ -643,13 +771,23 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Auto Haste
 
+            Button
+              id: modAutoHasteHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Auto Haste. Ejemplo: F2.
+
             TextEdit
               id: modAutoHasteKey
               anchors.left: prev.right
-              anchors.right: modAutoHasteSet.left
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
-              margin-right: 8
+              margin-right: 169
               height: 22
               font: terminus-10px
 
@@ -670,6 +808,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modAutoHasteOpen
+              anchors.right: modAutoHasteSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModAutoHeal
             height: 28
@@ -688,13 +835,23 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Auto Heal
 
+            Button
+              id: modAutoHealHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Auto Heal. Ejemplo: F3.
+
             TextEdit
               id: modAutoHealKey
               anchors.left: prev.right
-              anchors.right: modAutoHealSet.left
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
-              margin-right: 8
+              margin-right: 169
               height: 22
               font: terminus-10px
 
@@ -715,6 +872,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modAutoHealOpen
+              anchors.right: modAutoHealSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModRingSwap
             height: 28
@@ -732,14 +898,25 @@ DruidToolkitSetupWindow < MainWindow
               margin-left: 8
               width: 170
               text: Ring Swap (Immortal)
+              tooltip: Energy Ring ID = 3051 | Normal Ring ID = 3006.
+
+            Button
+              id: modRingSwapHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Ring Swap (Immortal).
 
             TextEdit
               id: modRingSwapKey
               anchors.left: prev.right
-              anchors.right: modRingSwapSet.left
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
-              margin-right: 8
+              margin-right: 169
               height: 22
               font: terminus-10px
 
@@ -760,6 +937,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modRingSwapOpen
+              anchors.right: modRingSwapSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModMagicWall
             height: 28
@@ -778,13 +964,23 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Magic Wall (Hold)
 
+            Button
+              id: modMagicWallHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Magic Wall Hold.
+
             TextEdit
               id: modMagicWallKey
               anchors.left: prev.right
-              anchors.right: modMagicWallSet.left
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
-              margin-right: 8
+              margin-right: 169
               height: 22
               font: terminus-10px
 
@@ -805,6 +1001,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modMagicWallOpen
+              anchors.right: modMagicWallSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModManaPot
             height: 28
@@ -823,13 +1028,23 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Faster Mana Potting
 
+            Button
+              id: modManaPotHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Faster Mana Potting.
+
             TextEdit
               id: modManaPotKey
               anchors.left: prev.right
-              anchors.right: modManaPotSet.left
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
-              margin-right: 8
+              margin-right: 169
               height: 22
               font: terminus-10px
 
@@ -850,6 +1065,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modManaPotOpen
+              anchors.right: modManaPotSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModCutWg
             height: 28
@@ -868,13 +1092,23 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Auto Cut Wild Growth
 
+            Button
+              id: modCutWgHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Auto Cut Wild Growth.
+
             TextEdit
               id: modCutWgKey
               anchors.left: prev.right
-              anchors.right: modCutWgSet.left
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
-              margin-right: 8
+              margin-right: 169
               height: 22
               font: terminus-10px
 
@@ -895,6 +1129,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modCutWgOpen
+              anchors.right: modCutWgSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModStamina
             height: 28
@@ -913,13 +1156,23 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Stamina Item
 
+            Button
+              id: modStaminaHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Stamina Item.
+
             TextEdit
               id: modStaminaKey
               anchors.left: prev.right
-              anchors.right: modStaminaSet.left
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
-              margin-right: 8
+              margin-right: 169
               height: 22
               font: terminus-10px
 
@@ -940,6 +1193,15 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+            Button
+              id: modStaminaOpen
+              anchors.right: modStaminaSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
           Panel
             id: rowModSpellwand
             height: 28
@@ -958,13 +1220,23 @@ DruidToolkitSetupWindow < MainWindow
               width: 170
               text: Spellwand
 
+            Button
+              id: modSpellwandHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Hotkey para toggle de Spellwand.
+
             TextEdit
               id: modSpellwandKey
               anchors.left: prev.right
-              anchors.right: modSpellwandSet.left
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
-              margin-right: 8
+              margin-right: 169
               height: 22
               font: terminus-10px
 
@@ -984,6 +1256,79 @@ DruidToolkitSetupWindow < MainWindow
               width: 46
               height: 22
               text: Set
+
+            Button
+              id: modSpellwandOpen
+              anchors.right: modSpellwandSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+          Panel
+            id: rowModOpenBpMin
+            height: 28
+
+            BotSwitch
+              id: modOpenBpMinSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modOpenBpMinSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Open BP Minimized
+
+            Button
+              id: modOpenBpMinHelp
+              anchors.left: prev.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Abre y minimiza tu backpack principal automaticamente.
+
+            TextEdit
+              id: modOpenBpMinKey
+              anchors.left: prev.right
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modOpenBpMinClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modOpenBpMinSet
+              anchors.right: modOpenBpMinClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modOpenBpMinOpen
+              anchors.right: modOpenBpMinSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
 
       Panel
         id: pageHotkeys
@@ -1053,9 +1398,19 @@ DruidToolkitSetupWindow < MainWindow
               width: 180
               color: #ffffff
 
+            Button
+              id: caveToggleHelp
+              anchors.left: caveToggleLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Herramientas de CaveBot Toggle.
+
             TextEdit
               id: caveToggleKey
-              anchors.left: caveToggleLabel.right
+              anchors.left: caveToggleHelp.right
               anchors.right: caveToggleSet.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1096,9 +1451,19 @@ DruidToolkitSetupWindow < MainWindow
               width: 180
               color: #ffffff
 
+            Button
+              id: targetToggleHelp
+              anchors.left: targetToggleLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Herramientas de TargetBot Toggle.
+
             TextEdit
               id: targetToggleKey
-              anchors.left: targetToggleLabel.right
+              anchors.left: targetToggleHelp.right
               anchors.right: targetToggleSet.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1139,9 +1504,19 @@ DruidToolkitSetupWindow < MainWindow
               width: 180
               color: #ffaa00
 
+            Button
+              id: ueNonSafeHelp
+              anchors.left: ueNonSafeLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Herramientas de UE NON-SAFE.
+
             TextEdit
               id: ueNonSafeKey
-              anchors.left: ueNonSafeLabel.right
+              anchors.left: ueNonSafeHelp.right
               anchors.right: ueNonSafeSet.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1182,9 +1557,19 @@ DruidToolkitSetupWindow < MainWindow
               width: 180
               color: #00c000
 
+            Button
+              id: ueSafeHelp
+              anchors.left: ueSafeLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Herramientas de UE SAFE.
+
             TextEdit
               id: ueSafeKey
-              anchors.left: ueSafeLabel.right
+              anchors.left: ueSafeHelp.right
               anchors.right: ueSafeSet.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1225,9 +1610,19 @@ DruidToolkitSetupWindow < MainWindow
               width: 180
               color: #ffffff
 
+            Button
+              id: superSdHelp
+              anchors.left: superSdLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Herramientas de Super SD.
+
             TextEdit
               id: superSdKey
-              anchors.left: superSdLabel.right
+              anchors.left: superSdHelp.right
               anchors.right: superSdSet.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1268,9 +1663,19 @@ DruidToolkitSetupWindow < MainWindow
               width: 180
               color: #ff4513
 
+            Button
+              id: superSdFireHelp
+              anchors.left: superSdFireLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Herramientas de Super SD Fire.
+
             TextEdit
               id: superSdFireKey
-              anchors.left: superSdFireLabel.right
+              anchors.left: superSdFireHelp.right
               anchors.right: superSdFireSet.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1311,9 +1716,19 @@ DruidToolkitSetupWindow < MainWindow
               width: 180
               color: #88e3dd
 
+            Button
+              id: superSdHolyHelp
+              anchors.left: superSdHolyLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Herramientas de Super Holy SD.
+
             TextEdit
               id: superSdHolyKey
-              anchors.left: superSdHolyLabel.right
+              anchors.left: superSdHolyHelp.right
               anchors.right: superSdHolySet.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1354,9 +1769,19 @@ DruidToolkitSetupWindow < MainWindow
               width: 180
               color: #3895D3
 
+            Button
+              id: sioVipHelp
+              anchors.left: sioVipLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Herramientas de Sio VIP.
+
             TextEdit
               id: sioVipKey
-              anchors.left: sioVipLabel.right
+              anchors.left: sioVipHelp.right
               anchors.right: sioVipSet.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1397,9 +1822,19 @@ DruidToolkitSetupWindow < MainWindow
               width: 180
               color: #ffffff
 
+            Button
+              id: followToggleHelp
+              anchors.left: followToggleLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: (?)
+              tooltip: Herramientas de Follow Toggle.
+
             TextEdit
               id: followToggleKey
-              anchors.left: followToggleLabel.right
+              anchors.left: followToggleHelp.right
               anchors.right: followToggleSet.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1464,15 +1899,26 @@ DruidToolkitSetupWindow < MainWindow
             height: 22
 
             Label
+              id: scriptFileLabel
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
               text: File
               width: 60
 
+            Button
+              id: scriptFileHelp
+              anchors.left: scriptFileLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 20
+              text: (?)
+              tooltip: Ruta del .lua para cargar/guardar aqui. Tambien puedes editar directo en Files.
+
             TextEdit
               id: scriptFile
-              anchors.left: prev.right
-              anchors.right: scriptLoad.left
+              anchors.left: scriptFileHelp.right
+              anchors.right: scriptSaveHelp.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               margin-right: 8
@@ -1483,11 +1929,30 @@ DruidToolkitSetupWindow < MainWindow
 
             Button
               id: scriptLoad
+              anchors.right: scriptSave.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 70
+              height: 20
+              text: Load
+
+            Button
+              id: scriptSave
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               width: 70
               height: 20
-              text: Load
+              text: Save
+
+            Button
+              id: scriptSaveHelp
+              anchors.right: scriptLoad.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 20
+              text: (?)
+              tooltip: Puedes editar aqui y guardar. Tambien puedes editar el .lua directamente en Files.
 
           Panel
             id: rowScriptSearch
@@ -1498,14 +1963,25 @@ DruidToolkitSetupWindow < MainWindow
             height: 22
 
             Label
+              id: scriptSearchLabel
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
               text: Search
               width: 60
 
+            Button
+              id: scriptSearchHelp
+              anchors.left: scriptSearchLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 20
+              text: (?)
+              tooltip: Buscar texto dentro del script cargado.
+
             TextEdit
               id: scriptSearch
-              anchors.left: prev.right
+              anchors.left: scriptSearchHelp.right
               anchors.right: scriptFind.left
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
@@ -1549,17 +2025,29 @@ DruidToolkitSetupWindow < MainWindow
             anchors.right: parent.right
             margin-top: 10
 
+            Button
+              id: scriptViewerHelp
+              anchors.top: parent.top
+              anchors.left: parent.left
+              margin-left: 2
+              width: 22
+              height: 20
+              text: (?)
+              tooltip: Editor in-game. Tambien puedes editar directo el .lua desde Files.
+
             TextEdit
               id: scriptContent
-              anchors.top: parent.top
+              anchors.top: scriptViewerHelp.bottom
               anchors.left: parent.left
               anchors.bottom: parent.bottom
               anchors.right: scriptScrollbar.left
+              margin-top: 6
               margin-right: 8
               text-wrap: false
               multiline: true
+              editable: true
               font: terminus-10px
-              tooltip: Viewer (read-only). Si no carga, revisa el path.
+              tooltip: Editor in-game del script cargado. Usa Save para guardar.
 
             VerticalScrollBar
               id: scriptScrollbar
@@ -1662,6 +2150,8 @@ DruidToolkitSetupWindow < MainWindow
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         size: 55 21
+
+
 
 
 
