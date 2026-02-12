@@ -54,6 +54,17 @@ Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
 
 ## Bitacora / Changelog
 
+### 2026-02-12
+
+- Merge completo con `origin/main` y resolucion de conflictos en Druid Toolkit.
+- `Scripts` ahora editable in-game + boton `Save` (escritura al `.lua` cargado).
+- Se agregaron/acomodaron botones `(?)` en `Icon Hotkeys` y en `Scripts` (File/Search/Viewer).
+- Nuevo modulo `Open BP Minimized` dentro de Toolkit:
+  - toggle + hotkey + `Open Script`
+  - campo `Backpack Main ID` en General (`0` = usar backpack equipada).
+- Guard anti-captura de hotkeys mientras estas en `pageScripts` para permitir escribir normal.
+- Se mantuvo el fix de spellwand para no usar sobre containers.
+
 ### 2026-02-10
 
 - Loader-based architecture (adios paste gigante)
