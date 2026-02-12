@@ -1047,6 +1047,23 @@ local function dtEnsureWindow()
       end
       doFind(reset ~= false)
     end
+  -- Modules: Open Script buttons (jump to exact macro block)
+  local function bindModuleOpen(openId, query)
+    local openBtn = dtResolve(dtWindow, openId)
+    if not openBtn then return end
+    openBtn.onClick = function()
+      dtShowPage("pageScripts")
+      if dtWindow and dtWindow._dtLoadScript then
+        pcall(dtWindow._dtLoadScript, "scripts/druid_toolkit.lua")
+      end
+      if query and dtWindow and dtWindow._dtScriptFind then
+        schedule(40, function()
+          if dtWindow and dtWindow._dtScriptFind then
+            pcall(dtWindow._dtScriptFind, query, true)
+          end
+        end)
+      end
+    end
   end
   -- Modules: Open Script buttons (jump to exact macro block)
   local function bindModuleOpen(openId, query)
@@ -1077,6 +1094,16 @@ local function dtEnsureWindow()
   bindModuleOpen("modStaminaOpen", "staminaMacro = macro")
   bindModuleOpen("modSpellwandOpen", "spellwandMacro = macro")
   bindModuleOpen("modOpenBpMinOpen", "openBpMinMacro = macro")
+
+  bindModuleOpen("modAntiParalyzeOpen", "antiParalyzeMacro = macro")
+  bindModuleOpen("modAutoHasteOpen", "autoHasteMacro = macro")
+  bindModuleOpen("modAutoHealOpen", "autoHealMacro = macro")
+  bindModuleOpen("modRingSwapOpen", "ringSwapMacro = macro")
+  bindModuleOpen("modMagicWallOpen", "holdMWMacro = macro")
+  bindModuleOpen("modManaPotOpen", "manaPotMacro = macro")
+  bindModuleOpen("modCutWgOpen", "cutWgMacro = macro")
+  bindModuleOpen("modStaminaOpen", "staminaMacro = macro")
+  bindModuleOpen("modSpellwandOpen", "spellwandMacro = macro")
 
   -- Hotkey binding helper: Set / Clear
   local function bindHotkeyRow(actionKey, keyId, setId, clearId)
