@@ -53,6 +53,21 @@ No se suben scripts comprados/bitlocked.
 Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
 
 ## Bitacora / Changelog
+### 2026-02-14
+
+- Fix al `_Loader.lua` para no romper cuando falta algun script en `vBot/`:
+  - ahora usa `pcall(dofile, ...)`
+  - si un archivo no existe, lo salta y loguea `[_Loader] Skipping ...`
+- MW ScrollDown integrado mejor en Setup:
+  - nueva seccion en `Spells`: `MW Block Check`
+  - selector con 3 modos: `Magic Wall`, `Wild Growth`, `Custom ID`
+  - campo editable para `Custom ID`
+  - `(?)` con explicacion clara del comportamiento
+- Limpieza interna del Toolkit:
+  - se elimino binding duplicado de MW mode que estaba en refresh
+  - ajustes de anchors de botones `(?)` en `Modules` para evitar warnings recursivos en OTUI
+- Validacion:
+  - `scripts/druid_toolkit.lua` parsea OK (sin error de sintaxis Lua)
 
 ### 2026-02-12
 
@@ -90,3 +105,4 @@ Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
   - Tabs + menu + footer signature
   - Scripts viewer con search + scrollbar
   - Modules tab (toggles + hotkeys para modulos)
+

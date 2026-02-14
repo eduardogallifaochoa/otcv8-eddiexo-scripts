@@ -39,7 +39,6 @@ cfg.healSpell = cfg.healSpell or "exura vita"
 cfg.healPercent = cfg.healPercent or 95
 
 cfg.followLeader = cfg.followLeader or "Name"
-cfg.bpMainId = tonumber(cfg.bpMainId) or 0
 
 cfg.hk = cfg.hk or {
   ueNonSafe = "F1",
@@ -50,15 +49,15 @@ cfg.hk = cfg.hk or {
   sioVip = "F6",
   caveToggle = "",
   targetToggle = "",
+  toolkitToggle = "F12",
   followToggle = (cfg.hk and cfg.hk.follow) or "F7",
-  openBpMin = "",
+  mwScroll = "",
 }
 -- Migrate legacy follow key
 if cfg.hk.follow and (not cfg.hk.followToggle or _trim(cfg.hk.followToggle) == "") then
   cfg.hk.followToggle = cfg.hk.follow
 end
 cfg.hk.follow = nil
-if cfg.hk.openBpMin == nil then cfg.hk.openBpMin = "" end
 
 -- Migrate legacy stop keys (from General page text edits) into hotkey list if empty.
 if (not cfg.hk.caveToggle or _trim(cfg.hk.caveToggle) == "") and _trim(cfg.stopCaveKey or ""):len() > 0 then
@@ -78,11 +77,21 @@ modDefault("autoHaste", true)
 modDefault("autoHeal", true)
 modDefault("ringSwap", true)
 modDefault("magicWall", true)
+modDefault("mwScroll", true)
 modDefault("manaPot", true)
 modDefault("cutWg", true)
 modDefault("stamina", true)
 modDefault("spellwand", false) -- safer default: OFF
-modDefault("openBpMin", false)
+cfg.mwScrollDelayMs = tonumber(cfg.mwScrollDelayMs) or 250
+cfg.mwScrollMagicWallId = tonumber(cfg.mwScrollMagicWallId) or 2128
+cfg.mwScrollWildGrowthId = tonumber(cfg.mwScrollWildGrowthId) or 2130
+cfg.mwScrollCustomId = tonumber(cfg.mwScrollCustomId) or cfg.mwScrollMagicWallId
+cfg.mwScrollBlockMode = cfg.mwScrollBlockMode or "magicwall"
+
+-- Editable UI labels + icon config overrides
+cfg.actionNames = cfg.actionNames or {}
+cfg.iconItemId = cfg.iconItemId or {}
+cfg.iconText = cfg.iconText or {}
 
 --==============================================================
 -- Helpers
@@ -117,6 +126,16 @@ end
 
 local function safeSetOn(widget, v)
   if widget and widget.setOn then widget:setOn(v) end
+end
+
+local function safeSetButtonActive(widget, isActive)
+  if not widget then return end
+  if widget.setBackgroundColor then
+    pcall(widget.setBackgroundColor, widget, isActive and "#0a7f0a" or "#ffffff12")
+  end
+  if widget.setColor then
+    pcall(widget.setColor, widget, isActive and "#ffffff" or "#e6e6e6")
+  end
 end
 
 local function toggleMacro(m)
@@ -223,11 +242,76 @@ local function dtRegisterAction(key, def)
   if type(key) ~= "string" or key:len() == 0 then return end
   if type(def) ~= "table" then def = {} end
   def.key = key
+
+  def.defaultLabel = _trim(def.defaultLabel or def.label or key)
+  local customLabel = _trim((cfg.actionNames and cfg.actionNames[key]) or "")
+  def.label = (customLabel:len() > 0) and customLabel or def.defaultLabel
+
+  if def.icon then
+    if (not def.iconDefaultItem) and def.icon.item and def.icon.item.getItemId then
+      local okId, itemId = pcall(def.icon.item.getItemId, def.icon.item)
+      if okId then def.iconDefaultItem = tonumber(itemId) or def.iconDefaultItem end
+    end
+    if (not def.iconDefaultText) and def.icon.text and def.icon.text.getText then
+      local okTxt, txt = pcall(def.icon.text.getText, def.icon.text)
+      if okTxt and type(txt) == "string" and txt:len() > 0 then
+        def.iconDefaultText = txt
+      end
+    end
+  end
+
   DT_ACTIONS[key] = def
 end
 
 local function dtGetAction(key)
   return DT_ACTIONS[key]
+end
+
+local function dtGetActionDisplayName(key, fallback)
+  local name = _trim((cfg.actionNames and cfg.actionNames[key]) or "")
+  if name:len() > 0 then return name end
+  local a = DT_ACTIONS[key]
+  if a and _trim(a.defaultLabel):len() > 0 then return a.defaultLabel end
+  return fallback or key
+end
+
+local function dtSetActionDisplayName(key, value)
+  if type(key) ~= "string" or key:len() == 0 then return end
+  cfg.actionNames = cfg.actionNames or {}
+  local name = _trim(value)
+  if name:len() == 0 then
+    cfg.actionNames[key] = nil
+  else
+    cfg.actionNames[key] = name
+  end
+  local a = DT_ACTIONS[key]
+  if a then
+    a.label = dtGetActionDisplayName(key, a.defaultLabel or key)
+  end
+end
+
+local function dtApplyActionIconConfig(key)
+  local a = dtGetAction(key)
+  if not a or not a.icon then return end
+
+  local wantedItem = tonumber((cfg.iconItemId and cfg.iconItemId[key]) or a.iconDefaultItem)
+  local wantedText = _trim((cfg.iconText and cfg.iconText[key]) or (a.iconDefaultText or ""))
+
+  if wantedItem and wantedItem > 0 then
+    if a.icon.item and a.icon.item.setItemId then
+      pcall(a.icon.item.setItemId, a.icon.item, wantedItem)
+    elseif a.icon.setItem then
+      pcall(a.icon.setItem, a.icon, wantedItem)
+    end
+  end
+
+  if wantedText:len() > 0 then
+    if a.icon.text and a.icon.text.setText then
+      pcall(a.icon.text.setText, a.icon.text, wantedText)
+    elseif a.icon.setText then
+      pcall(a.icon.setText, a.icon, wantedText)
+    end
+  end
 end
 
 local function dtMacroIsOn(m)
@@ -265,6 +349,60 @@ local function dtApplyActionDisabledVisual(key)
         if a.icon then a.icon._dtSuppress = nil end
       end)
     end
+  end
+end
+
+local function dtGetMwScrollMode()
+  local mode = _trim(cfg.mwScrollBlockMode or "magicwall"):lower()
+  mode = mode:gsub("%s+", "")
+  if mode == "mw" or mode == "magicwall" then return "magicwall" end
+  if mode == "wg" or mode == "wildgrowth" then return "wildgrowth" end
+  if mode == "custom" then return "custom" end
+  return "magicwall"
+end
+
+local function dtGetMwScrollBlockId()
+  local mode = dtGetMwScrollMode()
+  if mode == "wildgrowth" then
+    return tonumber(cfg.mwScrollWildGrowthId) or 2130
+  end
+  if mode == "custom" then
+    local customId = tonumber(cfg.mwScrollCustomId)
+    if customId and customId > 0 then return math.floor(customId) end
+    return tonumber(cfg.mwScrollMagicWallId) or 2128
+  end
+  return tonumber(cfg.mwScrollMagicWallId) or 2128
+end
+
+local function dtSetMwScrollMode(mode)
+  local m = _trim(mode):lower():gsub("%s+", "")
+  if m == "mw" or m == "magicwall" then
+    cfg.mwScrollBlockMode = "magicwall"
+  elseif m == "wg" or m == "wildgrowth" then
+    cfg.mwScrollBlockMode = "wildgrowth"
+  else
+    cfg.mwScrollBlockMode = "custom"
+  end
+end
+
+local function dtApplyMwScrollModeButtons()
+  if not dtWindow then return end
+  local mode = dtGetMwScrollMode()
+  safeSetButtonActive(dtResolve(dtWindow, "mwScrollModeMW"), mode == "magicwall")
+  safeSetButtonActive(dtResolve(dtWindow, "mwScrollModeWG"), mode == "wildgrowth")
+  safeSetButtonActive(dtResolve(dtWindow, "mwScrollModeCustom"), mode == "custom")
+end
+
+local function dtRefreshMwScrollModeUi()
+  if not dtWindow then return end
+  safeSetText(dtResolve(dtWindow, "mwScrollCustomId"), tostring(tonumber(cfg.mwScrollCustomId) or (tonumber(cfg.mwScrollMagicWallId) or 2128)))
+  dtApplyMwScrollModeButtons()
+end
+
+local function dtSetMwScrollCustomId(text)
+  local n = tonumber(text)
+  if n and n > 0 then
+    cfg.mwScrollCustomId = math.floor(n)
   end
 end
 
@@ -416,7 +554,6 @@ local HK_CAPTURE = nil
 -- Forward declaration (used by icon context menu)
 local dtOpen = nil
 local dtRefreshing = false
-local dtCurrentPage = "pageMenu"
 
 local function dtResolve(win, id)
   if not win then return nil end
@@ -427,7 +564,6 @@ end
 
 local function dtShowPage(pageId)
   if not dtWindow then return end
-  dtCurrentPage = pageId
   local pages = { "pageMenu", "pageGeneral", "pageSpells", "pageModules", "pageHotkeys", "pageScripts", "pageAbout" }
   for _, id in ipairs(pages) do
     local p = dtResolve(dtWindow, id)
@@ -454,23 +590,6 @@ local function dtShowPage(pageId)
       if b.setColor then pcall(b.setColor, b, active and "#ffffff" or "#e6e6e6") end
     end
   end
-end
-
-local function dtIsSetupVisible()
-  if not dtWindow or not dtWindow.isVisible then return false end
-  local ok, v = pcall(dtWindow.isVisible, dtWindow)
-  return ok and v == true
-end
-
-local function dtIsScriptsPageVisible()
-  if not dtIsSetupVisible() then return false end
-  if dtCurrentPage == "pageScripts" then return true end
-  local pageScripts = dtResolve(dtWindow, "pageScripts")
-  if pageScripts and pageScripts.isVisible then
-    local ok, v = pcall(pageScripts.isVisible, pageScripts)
-    if ok and v == true then return true end
-  end
-  return false
 end
 
 local function getBotConfigName()
@@ -514,8 +633,9 @@ local function dtRefresh()
 
   safeSetText(dtResolve(dtWindow, "stopCaveKey"), getHotkeyDisplay("caveToggle"))
   safeSetText(dtResolve(dtWindow, "stopTargetKey"), getHotkeyDisplay("targetToggle"))
+  safeSetText(dtResolve(dtWindow, "toolkitToggleKey"), getHotkeyDisplay("toolkitToggle"))
+  safeSetText(dtResolve(dtWindow, "followToggleGeneralKey"), getHotkeyDisplay("followToggle"))
   safeSetText(dtResolve(dtWindow, "followLeader"), cfg.followLeader or "")
-  safeSetText(dtResolve(dtWindow, "bpMainId"), tostring(tonumber(cfg.bpMainId) or 0))
 
   safeSetText(dtResolve(dtWindow, "ueSpell"), cfg.ueSpell or "")
   safeSetText(dtResolve(dtWindow, "ueRepeat"), tostring(cfg.ueRepeat or 4))
@@ -533,6 +653,16 @@ local function dtRefresh()
   safeSetText(dtResolve(dtWindow, "caveToggleKey"), getHotkeyDisplay("caveToggle"))
   safeSetText(dtResolve(dtWindow, "targetToggleKey"), getHotkeyDisplay("targetToggle"))
   safeSetText(dtResolve(dtWindow, "followToggleKey"), getHotkeyDisplay("followToggle"))
+  safeSetText(dtResolve(dtWindow, "caveToggleLabel"), dtGetActionDisplayName("caveToggle", "CaveBot (Toggle)"))
+  safeSetText(dtResolve(dtWindow, "targetToggleLabel"), dtGetActionDisplayName("targetToggle", "TargetBot (Toggle)"))
+  safeSetText(dtResolve(dtWindow, "ueNonSafeLabel"), dtGetActionDisplayName("ueNonSafe", "UE (NON-SAFE)"))
+  safeSetText(dtResolve(dtWindow, "ueSafeLabel"), dtGetActionDisplayName("ueSafe", "UE (SAFE)"))
+  safeSetText(dtResolve(dtWindow, "superSdLabel"), dtGetActionDisplayName("superSd", "Super SD"))
+  safeSetText(dtResolve(dtWindow, "superSdFireLabel"), dtGetActionDisplayName("superSdFire", "Super SD Fire"))
+  safeSetText(dtResolve(dtWindow, "superSdHolyLabel"), dtGetActionDisplayName("superSdHoly", "Super Holy SD"))
+  safeSetText(dtResolve(dtWindow, "sioVipLabel"), dtGetActionDisplayName("sioVip", "Sio VIP"))
+  safeSetText(dtResolve(dtWindow, "followToggleLabel"), dtGetActionDisplayName("followToggle", "Follow (Toggle)"))
+  dtRefreshMwScrollModeUi()
 
   -- Modules switches + hotkeys (persisted)
   safeSetOn(dtResolve(dtWindow, "modAntiParalyzeSwitch"), cfg.mods and cfg.mods.antiParalyze == true)
@@ -540,26 +670,27 @@ local function dtRefresh()
   safeSetOn(dtResolve(dtWindow, "modAutoHealSwitch"), cfg.mods and cfg.mods.autoHeal == true)
   safeSetOn(dtResolve(dtWindow, "modRingSwapSwitch"), cfg.mods and cfg.mods.ringSwap == true)
   safeSetOn(dtResolve(dtWindow, "modMagicWallSwitch"), cfg.mods and cfg.mods.magicWall == true)
+  safeSetOn(dtResolve(dtWindow, "mwScrollSpellSwitch"), cfg.mods and cfg.mods.mwScroll == true)
   safeSetOn(dtResolve(dtWindow, "modManaPotSwitch"), cfg.mods and cfg.mods.manaPot == true)
   safeSetOn(dtResolve(dtWindow, "modCutWgSwitch"), cfg.mods and cfg.mods.cutWg == true)
   safeSetOn(dtResolve(dtWindow, "modStaminaSwitch"), cfg.mods and cfg.mods.stamina == true)
   safeSetOn(dtResolve(dtWindow, "modSpellwandSwitch"), cfg.mods and cfg.mods.spellwand == true)
-  safeSetOn(dtResolve(dtWindow, "modOpenBpMinSwitch"), cfg.mods and cfg.mods.openBpMin == true)
 
   safeSetText(dtResolve(dtWindow, "modAntiParalyzeKey"), getHotkeyDisplay("antiParalyze"))
   safeSetText(dtResolve(dtWindow, "modAutoHasteKey"), getHotkeyDisplay("autoHaste"))
   safeSetText(dtResolve(dtWindow, "modAutoHealKey"), getHotkeyDisplay("autoHeal"))
   safeSetText(dtResolve(dtWindow, "modRingSwapKey"), getHotkeyDisplay("ringSwap"))
   safeSetText(dtResolve(dtWindow, "modMagicWallKey"), getHotkeyDisplay("magicWall"))
+  safeSetText(dtResolve(dtWindow, "mwScrollSpellKey"), getHotkeyDisplay("mwScroll"))
   safeSetText(dtResolve(dtWindow, "modManaPotKey"), getHotkeyDisplay("manaPot"))
   safeSetText(dtResolve(dtWindow, "modCutWgKey"), getHotkeyDisplay("cutWg"))
   safeSetText(dtResolve(dtWindow, "modStaminaKey"), getHotkeyDisplay("stamina"))
   safeSetText(dtResolve(dtWindow, "modSpellwandKey"), getHotkeyDisplay("spellwand"))
-  safeSetText(dtResolve(dtWindow, "modOpenBpMinKey"), getHotkeyDisplay("openBpMin"))
 
   -- Keep icon hotkey badges + disabled visuals in sync.
   for k, a in pairs(DT_ACTIONS) do
     if a and a.icon then
+      dtApplyActionIconConfig(k)
       dtUpdateHotkeyBadge(k)
       dtApplyActionDisabledVisual(k)
     end
@@ -725,6 +856,264 @@ local function dtEnsureWindow()
     end
   end
 
+  -- Action rename / icon config helpers (right-click or help button)
+  local function dtOpenActionScript(actionKey)
+    local a = dtGetAction(actionKey)
+    if not a then return end
+    dtShowPage("pageScripts")
+    if dtWindow and dtWindow._dtLoadScript then
+      pcall(dtWindow._dtLoadScript, (a.script or "scripts/druid_toolkit.lua"))
+    end
+    if a.scriptQuery and dtWindow and dtWindow._dtScriptFind then
+      schedule(40, function()
+        if dtWindow and dtWindow._dtScriptFind then
+          pcall(dtWindow._dtScriptFind, a.scriptQuery, true)
+        end
+      end)
+    end
+  end
+
+  local function dtPromptText(title, initial, onSave)
+    local root = g_ui and g_ui.getRootWidget and g_ui.getRootWidget() or nil
+    if not root then return end
+
+    local ok, w = pcall(function()
+      return setupUI([[
+MainWindow
+  id: dtPromptWindow
+  text: Druid Toolkit
+  size: 360 130
+  draggable: true
+  @onEscape: self:destroy()
+
+  Label
+    id: promptTitle
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    margin-top: 18
+    margin-left: 14
+    margin-right: 14
+    text-align: center
+    text: Edit
+
+  TextEdit
+    id: promptInput
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: promptTitle.bottom
+    margin-top: 10
+    margin-left: 14
+    margin-right: 14
+    height: 24
+
+  Button
+    id: promptCancel
+    anchors.right: parent.horizontalCenter
+    anchors.bottom: parent.bottom
+    margin-right: 6
+    margin-bottom: 10
+    width: 80
+    text: Cancel
+
+  Button
+    id: promptSave
+    anchors.left: parent.horizontalCenter
+    anchors.bottom: parent.bottom
+    margin-left: 6
+    margin-bottom: 10
+    width: 80
+    text: Save
+]], root)
+    end)
+    if not ok or not w then return end
+
+    local t = dtResolve(w, "promptTitle")
+    local input = dtResolve(w, "promptInput")
+    local cancelBtn = dtResolve(w, "promptCancel")
+    local saveBtn = dtResolve(w, "promptSave")
+
+    safeSetText(t, title or "Edit")
+    safeSetText(input, tostring(initial or ""))
+
+    if cancelBtn then
+      cancelBtn.onClick = function() if w and w.destroy then w:destroy() end end
+    end
+
+    local function doSave()
+      local value = input and input.getText and input:getText() or ""
+      if onSave then pcall(onSave, value) end
+      if w and w.destroy then w:destroy() end
+      dtRefresh()
+    end
+
+    if saveBtn then saveBtn.onClick = doSave end
+    if input then input.onEnter = doSave end
+
+    if w.show then w:show() end
+    if w.raise then w:raise() end
+    if w.focus then w:focus() end
+    if input and input.focus then input:focus() end
+  end
+
+  local function dtOpenActionToolsMenu(actionKey, mousePos)
+    local a = dtGetAction(actionKey)
+    if not a then return end
+
+    local menu = g_ui.createWidget("PopupMenu")
+    menu:setGameMenu(true)
+
+    menu:addOption("Rename", function()
+      dtPromptText("Label for " .. (a.defaultLabel or actionKey), dtGetActionDisplayName(actionKey, a.defaultLabel or actionKey), function(v)
+        dtSetActionDisplayName(actionKey, v)
+      end)
+    end, "")
+
+    if a.icon then
+      menu:addOption("Set Icon ID", function()
+        local current = tostring((cfg.iconItemId and cfg.iconItemId[actionKey]) or a.iconDefaultItem or "")
+        dtPromptText("Icon ID for " .. dtGetActionDisplayName(actionKey, a.defaultLabel or actionKey), current, function(v)
+          local n = tonumber(_trim(v))
+          if n and n > 0 then
+            cfg.iconItemId[actionKey] = n
+          else
+            cfg.iconItemId[actionKey] = nil
+          end
+        end)
+      end, "")
+
+      menu:addOption("Set Icon Text", function()
+        local current = tostring((cfg.iconText and cfg.iconText[actionKey]) or a.iconDefaultText or "")
+        dtPromptText("Icon text for " .. dtGetActionDisplayName(actionKey, a.defaultLabel or actionKey), current, function(v)
+          local txt = _trim(v)
+          if txt:len() > 0 then
+            cfg.iconText[actionKey] = txt
+          else
+            cfg.iconText[actionKey] = nil
+          end
+        end)
+      end, "")
+
+      menu:addOption("Reset Icon", function()
+        if cfg.iconItemId then cfg.iconItemId[actionKey] = nil end
+        if cfg.iconText then cfg.iconText[actionKey] = nil end
+        dtRefresh()
+      end, "")
+    end
+
+    menu:addOption("Open Script", function()
+      dtOpenActionScript(actionKey)
+    end, "")
+
+    menu:display(mousePos or g_window.getMousePosition())
+  end
+
+  local function bindActionNameWidget(actionKey, labelId, helpId)
+    local nameWidget = dtResolve(dtWindow, labelId)
+    local helpWidget = dtResolve(dtWindow, helpId)
+
+    if nameWidget then
+      if nameWidget.setTooltip then
+        pcall(nameWidget.setTooltip, nameWidget, "Right-click: Tools (rename/icon). Double click: Open Script.")
+      end
+      if nameWidget.onTextChange then
+        nameWidget.onTextChange = function(_, text)
+          if dtRefreshing then return end
+          dtSetActionDisplayName(actionKey, text)
+        end
+      end
+
+      nameWidget.onDoubleClick = function()
+        dtOpenActionScript(actionKey)
+      end
+
+      nameWidget.onMouseRelease = function(_, mousePos, mouseButton)
+        if mouseButton == 2 then
+          dtOpenActionToolsMenu(actionKey, mousePos)
+          return true
+        end
+        return false
+      end
+    end
+
+    if helpWidget then
+      helpWidget.onClick = function()
+        dtOpenActionToolsMenu(actionKey, g_window.getMousePosition())
+      end
+    end
+  end
+  local function dtShowHelpPopup(text, mousePos)
+    local msg = _trim(text)
+    if msg:len() == 0 then return end
+    local menu = g_ui.createWidget("PopupMenu")
+    menu:setGameMenu(true)
+    menu:addOption(msg, function() end, "")
+    menu:display(mousePos or g_window.getMousePosition())
+  end
+
+  local function bindHelpButton(helpId, text)
+    local w = dtResolve(dtWindow, helpId)
+    if not w then return end
+    if w.setTooltip then pcall(w.setTooltip, w, text) end
+    w.onClick = function(_, mousePos)
+      dtShowHelpPopup(text, mousePos)
+    end
+  end
+
+  bindHelpButton("enabledHelp", "Enable or disable the entire Druid Toolkit.")
+  bindHelpButton("toolkitToggleHelp", "Global hotkey to toggle the whole toolkit (example: F12).")
+  bindHelpButton("hideEffectsHelp", "Hide visual effects on screen.")
+  bindHelpButton("hideTextsHelp", "Hide orange floating texts.")
+  bindHelpButton("stopCaveHelp", "Hotkey to pause/resume only CaveBot.")
+  bindHelpButton("stopTargetHelp", "Hotkey to pause/resume only TargetBot.")
+  bindHelpButton("followToggleGeneralHelp", "Hotkey to toggle Follow Leader.")
+  bindHelpButton("followLeaderHelp", "Exact player name you want to follow.")
+
+  bindHelpButton("ueSpellHelp", "UE spell used by SAFE and NON-SAFE modes.")
+  bindHelpButton("ueRepeatHelp", "How many times UE is cast when triggered.")
+  bindHelpButton("antiParalyzeSpellHelp", "Spell used to remove paralyze.")
+  bindHelpButton("hasteSpellHelp", "Automatic haste spell.")
+  bindHelpButton("healSpellHelp", "Automatic heal spell.")
+  bindHelpButton("healPercentHelp", "HP percent threshold to trigger Auto Heal.")
+
+  bindHelpButton("modAntiParalyzeHelp", "Anti Paralyze module: toggle + hotkey + Open Script.")
+  bindHelpButton("modAutoHasteHelp", "Auto Haste module: toggle + hotkey + Open Script.")
+  bindHelpButton("modAutoHealHelp", "Auto Heal module: toggle + hotkey + Open Script.")
+  bindHelpButton("modRingSwapHelp", "Ring Swap (Immortal) module. Energy and normal ring IDs are configurable in script.")
+  bindHelpButton("modMagicWallHelp", "Magic Wall Hold module.")
+  bindHelpButton("mwScrollSpellHelp", "MW ScrollDown module toggle and hotkey. Scroll down on map to cast.")
+  bindHelpButton("mwScrollTargetHelp", "Choose MW ScrollDown block check: Magic Wall (2128), Wild Growth (2130), or Custom ID.")
+  bindHelpButton("modManaPotHelp", "Faster Mana Potting module.")
+  bindHelpButton("modCutWgHelp", "Auto Cut Wild Growth module.")
+  bindHelpButton("modStaminaHelp", "Stamina Item module.")
+  bindHelpButton("modSpellwandHelp", "Spellwand module.")
+
+  bindHelpButton("manageIconsHelp", "Re-enable icons hidden with Disable Icon.")
+  bindHelpButton("scriptFileHelp", "Lua file path to load/save in this editor. You can also edit directly in Files.")
+  bindHelpButton("scriptSearchHelp", "Search text inside the loaded script.")
+  bindHelpButton("scriptSaveHelp", "Save in-game editor changes. You can also edit the lua directly in Files.")
+  bindHelpButton("scriptViewerHelp", "In-game editor for the loaded script. Use Save to persist changes.")
+  bindHelpButton("aboutRepoHelp", "Open the project GitHub repository.")
+  bindHelpButton("navHelp", "Navigation tabs: Menu, General, Spells, Modules, Icon Hotkeys, Scripts and About.")
+  bindHelpButton("menuLeftHelp", "Shortcuts to frequently used sections.")
+  bindHelpButton("menuRightHelp", "General settings and project about.")
+  bindHelpButton("backGeneralHelp", "Return to main menu.")
+  bindHelpButton("backSpellsHelp", "Return to main menu.")
+  bindHelpButton("backModulesHelp", "Return to main menu.")
+  bindHelpButton("backHotkeysHelp", "Return to main menu.")
+  bindHelpButton("backScriptsHelp", "Return to main menu.")
+  bindHelpButton("backAboutHelp", "Return to main menu.")
+  bindHelpButton("modulesHintHelp", "Enable/disable modules, assign hotkeys and open each script.")
+  bindHelpButton("hkHintHelp", "Rename actions, assign hotkeys and customize icons.")
+  bindHelpButton("scriptStatusHelp", "Shows loading status and search results.")
+  bindHelpButton("closeHelp", "Close setup window; does not disable the toolkit.")
+  bindHelpButton("btnIconsHelp", "Open Icon Hotkeys to assign keys and configure icons.")
+  bindHelpButton("btnSpellsMenuHelp", "Open Spells to edit spells and thresholds.")
+  bindHelpButton("btnModulesHelp", "Open Modules for toggles, hotkeys and Open Script.")
+  bindHelpButton("btnScriptsMenuHelp", "Open Scripts to load and search inside lua files.")
+  bindHelpButton("btnGeneralHelp", "Open General with global toolkit settings.")
+  bindHelpButton("btnAboutHelp", "Open About with project information.")
+
   -- General bindings
   local enabledSwitch = dtResolve(dtWindow, "enabledSwitch")
   if enabledSwitch then
@@ -763,6 +1152,22 @@ local function dtEnsureWindow()
   end
 
   local stopTargetKey = dtResolve(dtWindow, "stopTargetKey")
+  local toolkitToggleKey = dtResolve(dtWindow, "toolkitToggleKey")
+  if toolkitToggleKey then
+    toolkitToggleKey.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      setHotkeySet("toolkitToggle", text)
+    end
+  end
+
+  local followToggleGeneralKey = dtResolve(dtWindow, "followToggleGeneralKey")
+  if followToggleGeneralKey then
+    followToggleGeneralKey.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      setHotkeySet("followToggle", text)
+    end
+  end
+
   if stopTargetKey then
     stopTargetKey.onTextChange = function(_, text)
       if dtRefreshing then return end
@@ -775,14 +1180,6 @@ local function dtEnsureWindow()
     followLeader.onTextChange = function(_, text)
       if dtRefreshing then return end
       cfg.followLeader = text
-    end
-  end
-
-  local bpMainId = dtResolve(dtWindow, "bpMainId")
-  if bpMainId then
-    bpMainId.onTextChange = function(_, text)
-      if dtRefreshing then return end
-      cfg.bpMainId = tonumber(text) or 0
     end
   end
 
@@ -835,6 +1232,42 @@ local function dtEnsureWindow()
     end
   end
 
+  local mwScrollCustomId = dtResolve(dtWindow, "mwScrollCustomId")
+  if mwScrollCustomId then
+    mwScrollCustomId.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      dtSetMwScrollCustomId(text)
+      dtRefreshMwScrollModeUi()
+    end
+  end
+
+  local mwScrollModeMW = dtResolve(dtWindow, "mwScrollModeMW")
+  if mwScrollModeMW then
+    mwScrollModeMW.onClick = function()
+      if dtRefreshing then return end
+      dtSetMwScrollMode("magicwall")
+      dtRefreshMwScrollModeUi()
+    end
+  end
+
+  local mwScrollModeWG = dtResolve(dtWindow, "mwScrollModeWG")
+  if mwScrollModeWG then
+    mwScrollModeWG.onClick = function()
+      if dtRefreshing then return end
+      dtSetMwScrollMode("wildgrowth")
+      dtRefreshMwScrollModeUi()
+    end
+  end
+
+  local mwScrollModeCustom = dtResolve(dtWindow, "mwScrollModeCustom")
+  if mwScrollModeCustom then
+    mwScrollModeCustom.onClick = function()
+      if dtRefreshing then return end
+      dtSetMwScrollMode("custom")
+      dtRefreshMwScrollModeUi()
+    end
+  end
+
   -- Modules switches
   local function bindModuleSwitch(actionKey, switchId)
     local sw = dtResolve(dtWindow, switchId)
@@ -853,13 +1286,13 @@ local function dtEnsureWindow()
   bindModuleSwitch("autoHeal", "modAutoHealSwitch")
   bindModuleSwitch("ringSwap", "modRingSwapSwitch")
   bindModuleSwitch("magicWall", "modMagicWallSwitch")
+  bindModuleSwitch("mwScroll", "mwScrollSpellSwitch")
   bindModuleSwitch("manaPot", "modManaPotSwitch")
   bindModuleSwitch("cutWg", "modCutWgSwitch")
   bindModuleSwitch("stamina", "modStaminaSwitch")
   bindModuleSwitch("spellwand", "modSpellwandSwitch")
-  bindModuleSwitch("openBpMin", "modOpenBpMinSwitch")
 
-  -- Scripts viewer/editor
+  -- Scripts viewer/editor (load, edit, save)
   do
     local scriptFile = dtResolve(dtWindow, "scriptFile")
     local scriptLoad = dtResolve(dtWindow, "scriptLoad")
@@ -873,6 +1306,8 @@ local function dtEnsureWindow()
 
     local scriptSearchState = { query = "", lastPos = 0 }
     local scriptTextLen = 0
+    local scriptDirty = false
+    local scriptLoadingText = false
 
     local function syncScriptScrollbar()
       if not scriptScrollbar or not scriptScrollbar.setMinimum or not scriptScrollbar.setMaximum then return end
@@ -883,6 +1318,13 @@ local function dtEnsureWindow()
       pcall(scriptScrollbar.setMinimum, scriptScrollbar, 0)
       pcall(scriptScrollbar.setMaximum, scriptScrollbar, math.max(0, scriptTextLen))
       if scriptScrollbar.setValue then pcall(scriptScrollbar.setValue, scriptScrollbar, 0) end
+    end
+
+    local function updateScriptScrollLenFromText(text)
+      scriptTextLen = type(text) == "string" and #text or 0
+      if scriptScrollbar and scriptScrollbar.setMaximum then
+        pcall(scriptScrollbar.setMaximum, scriptScrollbar, math.max(0, scriptTextLen))
+      end
     end
 
     -- Prefer native binding when available; fallback to a coarse cursor-jump hack.
@@ -902,6 +1344,14 @@ local function dtEnsureWindow()
 
     if scriptContent and scriptContent.setEditable then
       pcall(function() scriptContent:setEditable(true) end)
+    end
+    if scriptContent then
+      scriptContent.onTextChange = function(_, text)
+        updateScriptScrollLenFromText(text)
+        if scriptLoadingText then return end
+        scriptDirty = true
+        safeSetText(scriptStatus, "Edited (unsaved).")
+      end
     end
 
     local function toResourcePath(rel)
@@ -935,11 +1385,11 @@ local function dtEnsureWindow()
       if not path then return false, "missing path" end
       data = type(data) == "string" and data or ""
       if g_resources and g_resources.writeFileContents then
-        local ok = pcall(g_resources.writeFileContents, path, data)
+        local ok, err = pcall(g_resources.writeFileContents, path, data)
         if ok then return true end
       end
       if writeFileContents then
-        local ok = pcall(writeFileContents, path, data)
+        local ok, err = pcall(writeFileContents, path, data)
         if ok then return true end
       end
       return false, "unable to write"
@@ -951,13 +1401,19 @@ local function dtEnsureWindow()
       local res = toResourcePath(rel)
       local data, err = readResource(res)
       if not data then
+        scriptLoadingText = true
         scriptContent:setText("Failed loading: " .. tostring(rel) .. "\n(" .. tostring(err) .. ")")
+        scriptLoadingText = false
+        scriptDirty = false
         safeSetText(scriptStatus, "Load failed.")
         return
       end
+      scriptLoadingText = true
       scriptContent:setText(data)
+      scriptLoadingText = false
       syncScriptScrollbar()
       scriptSearchState.lastPos = 0
+      scriptDirty = false
       safeSetText(scriptStatus, "Loaded: " .. tostring(rel))
     end
 
@@ -971,6 +1427,7 @@ local function dtEnsureWindow()
         safeSetText(scriptStatus, "Save failed: " .. tostring(err))
         return
       end
+      scriptDirty = false
       safeSetText(scriptStatus, "Saved: " .. tostring(rel))
     end
 
@@ -1047,23 +1504,6 @@ local function dtEnsureWindow()
       end
       doFind(reset ~= false)
     end
-  -- Modules: Open Script buttons (jump to exact macro block)
-  local function bindModuleOpen(openId, query)
-    local openBtn = dtResolve(dtWindow, openId)
-    if not openBtn then return end
-    openBtn.onClick = function()
-      dtShowPage("pageScripts")
-      if dtWindow and dtWindow._dtLoadScript then
-        pcall(dtWindow._dtLoadScript, "scripts/druid_toolkit.lua")
-      end
-      if query and dtWindow and dtWindow._dtScriptFind then
-        schedule(40, function()
-          if dtWindow and dtWindow._dtScriptFind then
-            pcall(dtWindow._dtScriptFind, query, true)
-          end
-        end)
-      end
-    end
   end
   -- Modules: Open Script buttons (jump to exact macro block)
   local function bindModuleOpen(openId, query)
@@ -1089,17 +1529,7 @@ local function dtEnsureWindow()
   bindModuleOpen("modAutoHealOpen", "autoHealMacro = macro")
   bindModuleOpen("modRingSwapOpen", "ringSwapMacro = macro")
   bindModuleOpen("modMagicWallOpen", "holdMWMacro = macro")
-  bindModuleOpen("modManaPotOpen", "manaPotMacro = macro")
-  bindModuleOpen("modCutWgOpen", "cutWgMacro = macro")
-  bindModuleOpen("modStaminaOpen", "staminaMacro = macro")
-  bindModuleOpen("modSpellwandOpen", "spellwandMacro = macro")
-  bindModuleOpen("modOpenBpMinOpen", "openBpMinMacro = macro")
-
-  bindModuleOpen("modAntiParalyzeOpen", "antiParalyzeMacro = macro")
-  bindModuleOpen("modAutoHasteOpen", "autoHasteMacro = macro")
-  bindModuleOpen("modAutoHealOpen", "autoHealMacro = macro")
-  bindModuleOpen("modRingSwapOpen", "ringSwapMacro = macro")
-  bindModuleOpen("modMagicWallOpen", "holdMWMacro = macro")
+  bindModuleOpen("mwScrollSpellOpen", "dtTryMWScrollDown")
   bindModuleOpen("modManaPotOpen", "manaPotMacro = macro")
   bindModuleOpen("modCutWgOpen", "cutWgMacro = macro")
   bindModuleOpen("modStaminaOpen", "staminaMacro = macro")
@@ -1142,11 +1572,11 @@ local function dtEnsureWindow()
   bindHotkeyRow("autoHeal", "modAutoHealKey", "modAutoHealSet", "modAutoHealClear")
   bindHotkeyRow("ringSwap", "modRingSwapKey", "modRingSwapSet", "modRingSwapClear")
   bindHotkeyRow("magicWall", "modMagicWallKey", "modMagicWallSet", "modMagicWallClear")
+  bindHotkeyRow("mwScroll", "mwScrollSpellKey", "mwScrollSpellSet", "mwScrollSpellClear")
   bindHotkeyRow("manaPot", "modManaPotKey", "modManaPotSet", "modManaPotClear")
   bindHotkeyRow("cutWg", "modCutWgKey", "modCutWgSet", "modCutWgClear")
   bindHotkeyRow("stamina", "modStaminaKey", "modStaminaSet", "modStaminaClear")
   bindHotkeyRow("spellwand", "modSpellwandKey", "modSpellwandSet", "modSpellwandClear")
-  bindHotkeyRow("openBpMin", "modOpenBpMinKey", "modOpenBpMinSet", "modOpenBpMinClear")
   bindHotkeyRow("ueNonSafe", "ueNonSafeKey", "ueNonSafeSet", "ueNonSafeClear")
   bindHotkeyRow("ueSafe", "ueSafeKey", "ueSafeSet", "ueSafeClear")
   bindHotkeyRow("superSd", "superSdKey", "superSdSet", "superSdClear")
@@ -1155,6 +1585,16 @@ local function dtEnsureWindow()
   bindHotkeyRow("sioVip", "sioVipKey", "sioVipSet", "sioVipClear")
   bindHotkeyRow("followToggle", "followToggleKey", "followToggleSet", "followToggleClear")
 
+  -- Editable action labels + per-action tools menu
+  bindActionNameWidget("caveToggle", "caveToggleLabel", "caveToggleHelp")
+  bindActionNameWidget("targetToggle", "targetToggleLabel", "targetToggleHelp")
+  bindActionNameWidget("ueNonSafe", "ueNonSafeLabel", "ueNonSafeHelp")
+  bindActionNameWidget("ueSafe", "ueSafeLabel", "ueSafeHelp")
+  bindActionNameWidget("superSd", "superSdLabel", "superSdHelp")
+  bindActionNameWidget("superSdFire", "superSdFireLabel", "superSdFireHelp")
+  bindActionNameWidget("superSdHoly", "superSdHolyLabel", "superSdHolyHelp")
+  bindActionNameWidget("sioVip", "sioVipLabel", "sioVipHelp")
+  bindActionNameWidget("followToggle", "followToggleLabel", "followToggleHelp")
   dtShowPage("pageMenu")
   dtRefresh()
   return true
@@ -1253,6 +1693,7 @@ local SPELLWAND_ITEMLIST = {
 
 -- Hide effects
 onAddThing(function(tile, thing)
+
   if not isEnabled() then return end
   if not cfg.hideEffects then return end
   if thing and thing.isEffect and thing:isEffect() then
@@ -1358,19 +1799,71 @@ holdMWMacro = macro(20, function()
   end
 end)
 
+-- MW ScrollDown integration (from mwall_scrolldown essence)
+local MW_SCROLL_DELAY_MS = tonumber(cfg.mwScrollDelayMs) or 250
+cfg.mwScrollDelayMs = MW_SCROLL_DELAY_MS
+local mwScrollLastUse = 0
+
+local function dtIsWheelDownKey(keys)
+  return keys == "MouseWheelDown" or keys == "WheelDown" or keys == "ScrollDown"
+end
+
+local function dtTryMWScrollDown()
+  if not holdMWMacro or holdMWMacro.isOff() then return false end
+  if not (cfg.mods and cfg.mods.mwScroll == true) then return false end
+  if now - mwScrollLastUse < MW_SCROLL_DELAY_MS then return false end
+
+  local tile = getTileUnderCursor()
+  if not tile then return false end
+  if isInPz() then return false end
+  if not tile:canShoot() or not tile:isWalkable() then return false end
+
+  local top = tile:getTopUseThing()
+  local blockId = dtGetMwScrollBlockId()
+  if blockId and blockId > 0 and top and top.getId and top:getId() == blockId then return false end
+
+  mwScrollLastUse = now
+  useWith(MW_RUNE_ID, top or tile:getGround() or tile)
+  return true
+end
+
+do
+  local mapPanel = modules.game_interface and modules.game_interface.getMapPanel and modules.game_interface.getMapPanel()
+  if mapPanel and not mapPanel._dtMwScrollInstalled then
+    mapPanel._dtMwScrollInstalled = true
+    mapPanel._dtMwScrollPrev = mapPanel.onMouseWheel
+    mapPanel.onMouseWheel = function(widget, mousePos, dir)
+      local isDown = (dir == 2 or dir == -1)
+      if isDown and (not chatTyping()) and isEnabled() then
+        if dtTryMWScrollDown() then
+          return true
+        end
+      end
+      if mapPanel._dtMwScrollPrev then
+        return mapPanel._dtMwScrollPrev(widget, mousePos, dir)
+      end
+      return false
+    end
+  end
+end
+
+onKeyDown(function(keys)
+  if chatTyping() then return end
+  if not isEnabled() then return end
+  if not dtIsWheelDownKey(keys) then return end
+  dtTryMWScrollDown()
+end)
 local resetTimer = 0
 local resetTiles = false
 
 onKeyDown(function(keys)
   if chatTyping() then return end
-  if dtIsScriptsPageVisible() then return end
   if not isEnabled() then return end
   if keys == MW_MARK_KEY and resetTimer == 0 then resetTimer = now end
 end)
 
 onKeyPress(function(keys)
   if chatTyping() then return end
-  if dtIsScriptsPageVisible() then return end
   if not isEnabled() then return end
 
   if keys == MW_MARK_KEY and (now - resetTimer) > 2500 then
@@ -1386,7 +1879,6 @@ end)
 
 onKeyUp(function(keys)
   if chatTyping() then return end
-  if dtIsScriptsPageVisible() then return end
   if not isEnabled() then return end
   if keys ~= MW_MARK_KEY or resetTiles then return end
 
@@ -1630,7 +2122,140 @@ local iconSioVip = addIcon("dt_SioVIP_Icon", { item = 3160, text = "SIO" }, func
   dtSetActionOn("sioVip", isOn, "icon")
 end)
 
+local caveToggleMacro = {
+  isOn = function()
+    return CaveBot and CaveBot.isOn and CaveBot.isOn() or false
+  end,
+  setOn = function(v)
+    if not CaveBot then return end
+    if v then
+      if CaveBot.setOn then CaveBot.setOn() end
+    else
+      if CaveBot.setOff then CaveBot.setOff() end
+    end
+  end
+}
+
+local mwScrollToggleMacro = {
+  isOn = function()
+    return cfg.mods and cfg.mods.mwScroll == true
+  end,
+  setOn = function(v)
+    cfg.mods = cfg.mods or {}
+    cfg.mods.mwScroll = (v == true)
+  end
+}
+
+local targetToggleMacro = {
+  isOn = function()
+    return TargetBot and TargetBot.isOn and TargetBot.isOn() or false
+  end,
+  setOn = function(v)
+    if not TargetBot then return end
+    if v then
+      if TargetBot.setOn then TargetBot.setOn() end
+    else
+      if TargetBot.setOff then TargetBot.setOff() end
+    end
+  end
+}
+
+local iconCaveToggle = addIcon("dt_CaveToggle_Icon", { item = 3156, text = "CAVE" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  if not isEnabled() then
+    if icon and icon.setOn then
+      icon._dtSuppress = true
+      pcall(icon.setOn, icon, false)
+      schedule(0, function() if icon then icon._dtSuppress = nil end end)
+    end
+    return
+  end
+  if CaveBot then
+    if isOn then if CaveBot.setOn then CaveBot.setOn() end else if CaveBot.setOff then CaveBot.setOff() end end
+  end
+end)
+
+local iconTargetToggle = addIcon("dt_TargetToggle_Icon", { item = 3155, text = "TAR" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  if not isEnabled() then
+    if icon and icon.setOn then
+      icon._dtSuppress = true
+      pcall(icon.setOn, icon, false)
+      schedule(0, function() if icon then icon._dtSuppress = nil end end)
+    end
+    return
+  end
+  if TargetBot then
+    if isOn then if TargetBot.setOn then TargetBot.setOn() end else if TargetBot.setOff then TargetBot.setOff() end end
+  end
+end)
+
+local iconAntiParalyze = addIcon("dt_AntiParalyze_Icon", { item = 3147, text = "A-P" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("antiParalyze", isOn, "icon")
+end)
+
+local iconAutoHaste = addIcon("dt_AutoHaste_Icon", { item = 3079, text = "HST" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("autoHaste", isOn, "icon")
+end)
+
+local iconAutoHeal = addIcon("dt_AutoHeal_Icon", { item = 3160, text = "HEAL" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("autoHeal", isOn, "icon")
+end)
+
+local iconRingSwap = addIcon("dt_RingSwap_Icon", { item = 3051, text = "RING" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("ringSwap", isOn, "icon")
+end)
+
+local iconMagicWall = addIcon("dt_MagicWall_Icon", { item = 3180, text = "MW" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("magicWall", isOn, "icon")
+end)
+
+local iconManaPot = addIcon("dt_ManaPot_Icon", { item = 238, text = "MANA" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("manaPot", isOn, "icon")
+end)
+
+local iconCutWg = addIcon("dt_CutWg_Icon", { item = 3308, text = "CUT" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("cutWg", isOn, "icon")
+end)
+
+local iconStamina = addIcon("dt_Stamina_Icon", { item = 11372, text = "STA" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("stamina", isOn, "icon")
+end)
+
+local iconSpellwand = addIcon("dt_Spellwand_Icon", { item = SPELLWAND_ID, text = "SW" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("spellwand", isOn, "icon")
+end)
+
+local iconFollow = addIcon("dt_Follow_Icon", { item = 3031, text = "FLW" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("followToggle", isOn, "icon")
+end)
 -- Register actions for hotkeys + context menu + sync.
+dtRegisterAction("caveToggle", {
+  label = "CaveBot (Toggle)",
+  macro = caveToggleMacro,
+  icon = iconCaveToggle,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "CaveBot / TargetBot toggles",
+  setupPage = "pageHotkeys",
+})
+dtRegisterAction("targetToggle", {
+  label = "TargetBot (Toggle)",
+  macro = targetToggleMacro,
+  icon = iconTargetToggle,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "CaveBot / TargetBot toggles",
+  setupPage = "pageHotkeys",
+})
 dtRegisterAction("ueNonSafe", {
   label = "UE (NON-SAFE)",
   macro = ueNonSafe,
@@ -1678,13 +2303,15 @@ dtRegisterAction("sioVip", {
 
 -- Shift + RightClick on icon: per-action context menu (registry-driven)
 local DT_ACTION_UI = {
+  caveToggle = { keyId = "caveToggleKey" },
+  targetToggle = { keyId = "targetToggleKey" },
   ueNonSafe = { keyId = "ueNonSafeKey" },
   ueSafe = { keyId = "ueSafeKey" },
   superSd = { keyId = "superSdKey" },
   superSdFire = { keyId = "superSdFireKey" },
   superSdHoly = { keyId = "superSdHolyKey" },
   sioVip = { keyId = "sioVipKey" },
-  followToggle = { keyId = "followToggleKey" },
+  followToggle = { keyId = "followToggleGeneralKey" },
 }
 
 local function dtIsShiftDown()
@@ -1699,8 +2326,10 @@ end
 
 local function dtStartHotkeyCapture(actionKey)
   if not actionKey then return end
+  local a = dtGetAction(actionKey)
+  local targetPage = (a and a.setupPage) or "pageHotkeys"
   dtOpen()
-  dtShowPage("pageHotkeys")
+  dtShowPage(targetPage)
   HK_CAPTURE = { action = actionKey }
   local ids = DT_ACTION_UI[actionKey]
   local keyWidget = ids and dtResolve(dtWindow, ids.keyId) or nil
@@ -1776,6 +2405,7 @@ end
 for k, a in pairs(DT_ACTIONS) do
   dtAttachIconContextMenu(k)
   if a and a.icon then
+    dtApplyActionIconConfig(k)
     dtUpdateHotkeyBadge(k)
     dtApplyActionDisabledVisual(k)
   end
@@ -1784,12 +2414,17 @@ end
 -- Hotkey capture + toggles (chat-safe)
 onKeyDown(function(keys)
   if chatTyping() then return end
-  if dtIsScriptsPageVisible() and not (HK_CAPTURE and HK_CAPTURE.action) then return end
 
   if HK_CAPTURE and HK_CAPTURE.action then
     setHotkeySet(HK_CAPTURE.action, keys)
     HK_CAPTURE = nil
     dtRefresh()
+    return
+  end
+
+  if hotkeyMatches("toolkitToggle", keys) then
+    cfg.enabled = not isEnabled()
+    dtApplyEnabledState()
     return
   end
 
@@ -1819,11 +2454,11 @@ onKeyDown(function(keys)
   if hotkeyMatches("autoHeal", keys) then dtToggleAction("autoHeal") return end
   if hotkeyMatches("ringSwap", keys) then dtToggleAction("ringSwap") return end
   if hotkeyMatches("magicWall", keys) then dtToggleAction("magicWall") return end
+  if hotkeyMatches("mwScroll", keys) then dtToggleAction("mwScroll") return end
   if hotkeyMatches("manaPot", keys) then dtToggleAction("manaPot") return end
   if hotkeyMatches("cutWg", keys) then dtToggleAction("cutWg") return end
   if hotkeyMatches("stamina", keys) then dtToggleAction("stamina") return end
   if hotkeyMatches("spellwand", keys) then dtToggleAction("spellwand") return end
-  if hotkeyMatches("openBpMin", keys) then dtToggleAction("openBpMin") return end
 
   if hotkeyMatches("ueNonSafe", keys) then dtToggleAction("ueNonSafe") return end
   if hotkeyMatches("ueSafe", keys) then dtToggleAction("ueSafe") return end
@@ -1971,7 +2606,7 @@ ultimateFollow.setOn(false)
 dtRegisterAction("followToggle", {
   label = "Follow Leader",
   macro = ultimateFollow,
-  icon = nil,
+  icon = iconFollow,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "ultimateFollow = macro",
   setupPage = "pageGeneral",
@@ -2035,91 +2670,6 @@ onCreatureDisappear(function(creature)
   end
 end)
 
--- Open backpack minimized
-local function dtFindContainerByItemId(itemId)
-  if not itemId then return nil end
-  for _, container in pairs(g_game.getContainers()) do
-    local cItem = container:getContainerItem()
-    if cItem and cItem:getId() == itemId then
-      return container
-    end
-  end
-  return nil
-end
-
-local function dtResolveMainBackpackId()
-  local cfgId = tonumber(cfg.bpMainId) or 0
-  if cfgId > 0 then return cfgId end
-  if getBack then
-    local back = getBack()
-    if back and back.getId then
-      return back:getId()
-    end
-  end
-  return nil
-end
-
-local function dtTryOpenContainerById(itemId)
-  if not itemId then return false end
-  if getBack then
-    local back = getBack()
-    if back and back:getId() == itemId then
-      g_game.open(back)
-      return true
-    end
-  end
-  for _, container in pairs(g_game.getContainers()) do
-    for _, item in ipairs(container:getItems()) do
-      if item.isContainer and item:isContainer() and item:getId() == itemId then
-        g_game.open(item)
-        return true
-      end
-    end
-  end
-  return false
-end
-
-local function dtMinimizeContainer(container)
-  if not container or not container.window then return end
-  local w = container.window
-  if w.minimize then
-    pcall(w.minimize, w)
-  elseif w.setContentHeight then
-    pcall(w.setContentHeight, w, 34)
-  end
-end
-
-local openBpMinMacro
-openBpMinMacro = macro(1200, function()
-  if not isEnabled() then return end
-  if openBpMinMacro.isOff() then return end
-  if not g_game.isOnline() then return end
-
-  local mainBpId = dtResolveMainBackpackId()
-  if not mainBpId then return end
-
-  local opened = dtFindContainerByItemId(mainBpId)
-  if opened then
-    dtMinimizeContainer(opened)
-    return
-  end
-
-  dtTryOpenContainerById(mainBpId)
-end)
-
-onContainerOpen(function(container, previousContainer)
-  if not isEnabled() then return end
-  if not openBpMinMacro or openBpMinMacro.isOff() then return end
-  local mainBpId = dtResolveMainBackpackId()
-  if not mainBpId then return end
-  if not container or not container.getContainerItem then return end
-  local cItem = container:getContainerItem()
-  if not cItem or cItem:getId() ~= mainBpId then return end
-  schedule(50, function()
-    dtMinimizeContainer(container)
-  end)
-end)
-
 -- Spellwand
 local spellwandMacro
 spellwandMacro = macro(1000, function()
@@ -2146,12 +2696,12 @@ manaPotMacro.setOn(cfg.mods.manaPot == true)
 cutWgMacro.setOn(cfg.mods.cutWg == true)
 staminaMacro.setOn(cfg.mods.stamina == true)
 spellwandMacro.setOn(cfg.mods.spellwand == true)
-openBpMinMacro.setOn(cfg.mods.openBpMin == true)
 
 -- Register module actions (UI + hotkeys; persisted)
 dtRegisterAction("antiParalyze", {
   label = "Anti Paralyze",
   macro = antiParalyzeMacro,
+  icon = iconAntiParalyze,
   persist = true,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "antiParalyzeMacro = macro",
@@ -2160,6 +2710,7 @@ dtRegisterAction("antiParalyze", {
 dtRegisterAction("autoHaste", {
   label = "Auto Haste",
   macro = autoHasteMacro,
+  icon = iconAutoHaste,
   persist = true,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "autoHasteMacro = macro",
@@ -2168,6 +2719,7 @@ dtRegisterAction("autoHaste", {
 dtRegisterAction("autoHeal", {
   label = "Auto Heal",
   macro = autoHealMacro,
+  icon = iconAutoHeal,
   persist = true,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "autoHealMacro = macro",
@@ -2176,6 +2728,7 @@ dtRegisterAction("autoHeal", {
 dtRegisterAction("ringSwap", {
   label = "Ring Swap (Immortal)",
   macro = ringSwapMacro,
+  icon = iconRingSwap,
   persist = true,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "ringSwapMacro = macro",
@@ -2184,14 +2737,24 @@ dtRegisterAction("ringSwap", {
 dtRegisterAction("magicWall", {
   label = "Magic Wall (Hold)",
   macro = holdMWMacro,
+  icon = iconMagicWall,
   persist = true,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "holdMWMacro = macro",
   setupPage = "pageModules",
 })
+dtRegisterAction("mwScroll", {
+  label = "MW ScrollDown",
+  macro = mwScrollToggleMacro,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "dtTryMWScrollDown",
+  setupPage = "pageSpells",
+})
 dtRegisterAction("manaPot", {
   label = "Faster Mana Potting",
   macro = manaPotMacro,
+  icon = iconManaPot,
   persist = true,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "manaPotMacro = macro",
@@ -2200,6 +2763,7 @@ dtRegisterAction("manaPot", {
 dtRegisterAction("cutWg", {
   label = "Auto Cut Wild Growth",
   macro = cutWgMacro,
+  icon = iconCutWg,
   persist = true,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "cutWgMacro = macro",
@@ -2208,6 +2772,7 @@ dtRegisterAction("cutWg", {
 dtRegisterAction("stamina", {
   label = "Stamina Item",
   macro = staminaMacro,
+  icon = iconStamina,
   persist = true,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "staminaMacro = macro",
@@ -2216,20 +2781,26 @@ dtRegisterAction("stamina", {
 dtRegisterAction("spellwand", {
   label = "Spellwand",
   macro = spellwandMacro,
+  icon = iconSpellwand,
   persist = true,
   script = "scripts/druid_toolkit.lua",
   scriptQuery = "spellwandMacro = macro",
   setupPage = "pageModules",
 })
-dtRegisterAction("openBpMin", {
-  label = "Open BP Minimized",
-  macro = openBpMinMacro,
-  persist = true,
-  script = "scripts/druid_toolkit.lua",
-  scriptQuery = "openBpMinMacro = macro",
-  setupPage = "pageModules",
-})
 
+-- Final sync after all actions are registered (including follow + modules).
+for k, a in pairs(DT_ACTIONS) do
+  dtAttachIconContextMenu(k)
+  if a and a.icon then
+    dtApplyActionIconConfig(k)
+    dtUpdateHotkeyBadge(k)
+    dtApplyActionDisabledVisual(k)
+  end
+end
 log("Loaded.")
+
+
+
+
 
 

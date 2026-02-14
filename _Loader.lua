@@ -23,7 +23,13 @@ do
 end
 
 local function loadScript(name)
-  return dofile("/vBot/" .. name .. ".lua")
+  local path = "/vBot/" .. name .. ".lua"
+  local ok, err = pcall(dofile, path)
+  if not ok then
+    print("[_Loader] Skipping '" .. name .. "' (" .. tostring(err) .. ")")
+    return false
+  end
+  return true
 end
 
 -- here you can set manually order of scripts
