@@ -39,6 +39,8 @@ cfg.healSpell = cfg.healSpell or "exura vita"
 cfg.healPercent = cfg.healPercent or 95
 
 cfg.followLeader = cfg.followLeader or "Name"
+cfg.leaderTargetName = cfg.leaderTargetName or cfg.followLeader or "Name"
+cfg.leaderTargetSwitchCooldownMs = tonumber(cfg.leaderTargetSwitchCooldownMs) or 200
 
 cfg.hk = cfg.hk or {
   ueNonSafe = "F1",
@@ -51,6 +53,7 @@ cfg.hk = cfg.hk or {
   targetToggle = "",
   toolkitToggle = "F12",
   followToggle = (cfg.hk and cfg.hk.follow) or "F7",
+  leaderTarget = "",
   mwScroll = "",
 }
 -- Migrate legacy follow key
@@ -82,6 +85,7 @@ modDefault("manaPot", true)
 modDefault("cutWg", true)
 modDefault("stamina", true)
 modDefault("spellwand", false) -- safer default: OFF
+modDefault("leaderTarget", false) -- safer default: OFF
 cfg.mwScrollDelayMs = tonumber(cfg.mwScrollDelayMs) or 250
 cfg.mwScrollMagicWallId = tonumber(cfg.mwScrollMagicWallId) or 2128
 cfg.mwScrollWildGrowthId = tonumber(cfg.mwScrollWildGrowthId) or 2130
@@ -234,6 +238,7 @@ end
 
 -- Forward declarations for icon-driven macros (used by master enable/disable).
 local ueNonSafe, ueSafe, superSd, superSdFire, superSdHoly, sioVipMacro
+local leaderTargetToggleMacro
 
 -- Action registry (single source of truth for icon <-> macro wiring)
 local DT_ACTIONS = {}
@@ -636,6 +641,8 @@ local function dtRefresh()
   safeSetText(dtResolve(dtWindow, "toolkitToggleKey"), getHotkeyDisplay("toolkitToggle"))
   safeSetText(dtResolve(dtWindow, "followToggleGeneralKey"), getHotkeyDisplay("followToggle"))
   safeSetText(dtResolve(dtWindow, "followLeader"), cfg.followLeader or "")
+  safeSetText(dtResolve(dtWindow, "leaderTargetName"), cfg.leaderTargetName or "")
+  safeSetText(dtResolve(dtWindow, "leaderTargetCooldown"), tostring(tonumber(cfg.leaderTargetSwitchCooldownMs) or 200))
 
   safeSetText(dtResolve(dtWindow, "ueSpell"), cfg.ueSpell or "")
   safeSetText(dtResolve(dtWindow, "ueRepeat"), tostring(cfg.ueRepeat or 4))
@@ -662,6 +669,8 @@ local function dtRefresh()
   safeSetText(dtResolve(dtWindow, "superSdHolyLabel"), dtGetActionDisplayName("superSdHoly", "Super Holy SD"))
   safeSetText(dtResolve(dtWindow, "sioVipLabel"), dtGetActionDisplayName("sioVip", "Sio VIP"))
   safeSetText(dtResolve(dtWindow, "followToggleLabel"), dtGetActionDisplayName("followToggle", "Follow (Toggle)"))
+  safeSetText(dtResolve(dtWindow, "leaderTargetKey"), getHotkeyDisplay("leaderTarget"))
+  safeSetText(dtResolve(dtWindow, "leaderTargetLabel"), dtGetActionDisplayName("leaderTarget", "Leader Target"))
   dtRefreshMwScrollModeUi()
 
   -- Modules switches + hotkeys (persisted)
@@ -675,6 +684,7 @@ local function dtRefresh()
   safeSetOn(dtResolve(dtWindow, "modCutWgSwitch"), cfg.mods and cfg.mods.cutWg == true)
   safeSetOn(dtResolve(dtWindow, "modStaminaSwitch"), cfg.mods and cfg.mods.stamina == true)
   safeSetOn(dtResolve(dtWindow, "modSpellwandSwitch"), cfg.mods and cfg.mods.spellwand == true)
+  safeSetOn(dtResolve(dtWindow, "modLeaderTargetSwitch"), cfg.mods and cfg.mods.leaderTarget == true)
 
   safeSetText(dtResolve(dtWindow, "modAntiParalyzeKey"), getHotkeyDisplay("antiParalyze"))
   safeSetText(dtResolve(dtWindow, "modAutoHasteKey"), getHotkeyDisplay("autoHaste"))
@@ -686,6 +696,7 @@ local function dtRefresh()
   safeSetText(dtResolve(dtWindow, "modCutWgKey"), getHotkeyDisplay("cutWg"))
   safeSetText(dtResolve(dtWindow, "modStaminaKey"), getHotkeyDisplay("stamina"))
   safeSetText(dtResolve(dtWindow, "modSpellwandKey"), getHotkeyDisplay("spellwand"))
+  safeSetText(dtResolve(dtWindow, "modLeaderTargetKey"), getHotkeyDisplay("leaderTarget"))
 
   -- Keep icon hotkey badges + disabled visuals in sync.
   for k, a in pairs(DT_ACTIONS) do
@@ -701,6 +712,7 @@ end
 
 local function dtApplyEnabledState()
   if not isEnabled() then
+    if HK_CAPTURE and HK_CAPTURE.window and HK_CAPTURE.window.destroy then pcall(HK_CAPTURE.window.destroy, HK_CAPTURE.window) end
     HK_CAPTURE = nil
     if ueNonSafe then ueNonSafe.setOn(false) end
     if ueSafe then ueSafe.setOn(false) end
@@ -817,14 +829,22 @@ local function dtEnsureWindow()
     if navScripts then navScripts.onClick = function() dtShowPage("pageScripts") end end
     if navAbout then navAbout.onClick = function() dtShowPage("pageAbout") end end
   end
-
-  -- About: repo button
+  -- About: links
   do
     local aboutRepo = dtResolve(dtWindow, "aboutRepo")
     if aboutRepo then
       aboutRepo.onClick = function()
         if g_platform and g_platform.openUrl then
           g_platform.openUrl("https://github.com/eduardogallifaochoa/otcv8-eddiexo-scripts")
+        end
+      end
+    end
+
+    local aboutDonate = dtResolve(dtWindow, "aboutDonate")
+    if aboutDonate then
+      aboutDonate.onClick = function()
+        if g_platform and g_platform.openUrl then
+          g_platform.openUrl("https://paypal.me/eddielol")
         end
       end
     end
@@ -856,6 +876,163 @@ local function dtEnsureWindow()
     end
   end
 
+
+
+  local function dtCancelHotkeyCapture(refreshUi)
+    local cap = HK_CAPTURE
+    HK_CAPTURE = nil
+    if cap and cap.window and cap.window.destroy and not cap.window._dtDestroyed then
+      pcall(cap.window.destroy, cap.window)
+    end
+    if refreshUi ~= false then dtRefresh() end
+  end
+
+  local function dtOpenHotkeyCapturePrompt(actionKey, keyWidget)
+    if HK_CAPTURE then
+      dtCancelHotkeyCapture(false)
+    end
+
+    local root = g_ui and g_ui.getRootWidget and g_ui.getRootWidget() or nil
+    if not root then
+      HK_CAPTURE = { action = actionKey, keyWidget = keyWidget }
+      safeSetText(keyWidget, "Press...")
+      return
+    end
+
+    local a = dtGetAction(actionKey)
+    local actionLabel = dtGetActionDisplayName(actionKey, (a and a.defaultLabel) or actionKey)
+
+    local ok, w = pcall(function()
+      return setupUI([[
+MainWindow
+  id: dtHotkeyCaptureWindow
+  text: Druid Toolkit
+  size: 330 140
+  draggable: true
+
+
+  Label
+    id: hkTitle
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    margin-top: 16
+    margin-left: 12
+    margin-right: 12
+    text-align: center
+    text: Hotkey Capture
+
+  Label
+    id: hkAction
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: hkTitle.bottom
+    margin-top: 6
+    margin-left: 12
+    margin-right: 12
+    text-align: center
+    text: Action
+
+  Label
+    id: hkValue
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: hkAction.bottom
+    margin-top: 8
+    margin-left: 12
+    margin-right: 12
+    text-align: center
+    text: Press any key...
+
+  Button
+    id: hkCancel
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+    margin-left: 12
+    margin-bottom: 10
+    width: 70
+    text: Cancel
+
+  Button
+    id: hkClear
+    anchors.left: hkCancel.right
+    anchors.bottom: parent.bottom
+    margin-left: 6
+    margin-bottom: 10
+    width: 70
+    text: Clear
+
+  Button
+    id: hkSave
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-right: 12
+    margin-bottom: 10
+    width: 70
+    text: Save
+]], root)
+    end)
+
+    if not ok or not w then
+      HK_CAPTURE = { action = actionKey, keyWidget = keyWidget }
+      safeSetText(keyWidget, "Press...")
+      return
+    end
+
+    local title = dtResolve(w, "hkTitle")
+    local actionText = dtResolve(w, "hkAction")
+    local valueText = dtResolve(w, "hkValue")
+    local cancelBtn = dtResolve(w, "hkCancel")
+    local clearBtn = dtResolve(w, "hkClear")
+    local saveBtn = dtResolve(w, "hkSave")
+
+    safeSetText(title, "[Hotkey]")
+    safeSetText(actionText, "<" .. tostring(actionLabel or actionKey) .. ">")
+    safeSetText(valueText, "[Press any key...]")
+    safeSetText(keyWidget, "Press...")
+
+    HK_CAPTURE = {
+      action = actionKey,
+      keyWidget = keyWidget,
+      window = w,
+      valueText = valueText,
+      pending = nil,
+    }
+
+    w.onDestroy = function()
+      w._dtDestroyed = true
+      if HK_CAPTURE and HK_CAPTURE.window == w then
+        HK_CAPTURE.window = nil
+      end
+    end
+
+    if cancelBtn then
+      cancelBtn.onClick = function()
+        dtCancelHotkeyCapture(true)
+      end
+    end
+
+    if clearBtn then
+      clearBtn.onClick = function()
+        clearHotkeys(actionKey)
+        dtCancelHotkeyCapture(true)
+      end
+    end
+
+    if saveBtn then
+      saveBtn.onClick = function()
+        if HK_CAPTURE and HK_CAPTURE.action == actionKey and HK_CAPTURE.pending and _trim(HK_CAPTURE.pending):len() > 0 then
+          setHotkeySet(actionKey, HK_CAPTURE.pending)
+        end
+        dtCancelHotkeyCapture(true)
+      end
+    end
+
+    if w.show then w:show() end
+    if w.raise then w:raise() end
+    if w.focus then w:focus() end
+  end
+
   -- Action rename / icon config helpers (right-click or help button)
   local function dtOpenActionScript(actionKey)
     local a = dtGetAction(actionKey)
@@ -884,7 +1061,7 @@ MainWindow
   text: Druid Toolkit
   size: 360 130
   draggable: true
-  @onEscape: self:destroy()
+
 
   Label
     id: promptTitle
@@ -1068,6 +1245,8 @@ MainWindow
   bindHelpButton("stopTargetHelp", "Hotkey to pause/resume only TargetBot.")
   bindHelpButton("followToggleGeneralHelp", "Hotkey to toggle Follow Leader.")
   bindHelpButton("followLeaderHelp", "Exact player name you want to follow.")
+  bindHelpButton("leaderTargetNameHelp", "Exact leader name used by Leader Target Assist missile detection.")
+  bindHelpButton("leaderTargetCooldownHelp", "Switch cooldown in milliseconds to avoid flicker.")
 
   bindHelpButton("ueSpellHelp", "UE spell used by SAFE and NON-SAFE modes.")
   bindHelpButton("ueRepeatHelp", "How many times UE is cast when triggered.")
@@ -1087,6 +1266,7 @@ MainWindow
   bindHelpButton("modCutWgHelp", "Auto Cut Wild Growth module.")
   bindHelpButton("modStaminaHelp", "Stamina Item module.")
   bindHelpButton("modSpellwandHelp", "Spellwand module.")
+  bindHelpButton("modLeaderTargetHelp", "Leader Target Assist module (missile-based).")
 
   bindHelpButton("manageIconsHelp", "Re-enable icons hidden with Disable Icon.")
   bindHelpButton("scriptFileHelp", "Lua file path to load/save in this editor. You can also edit directly in Files.")
@@ -1094,6 +1274,7 @@ MainWindow
   bindHelpButton("scriptSaveHelp", "Save in-game editor changes. You can also edit the lua directly in Files.")
   bindHelpButton("scriptViewerHelp", "In-game editor for the loaded script. Use Save to persist changes.")
   bindHelpButton("aboutRepoHelp", "Open the project GitHub repository.")
+  bindHelpButton("aboutDonateHelp", "Optional PayPal donation link if the scripts helped you.")
   bindHelpButton("navHelp", "Navigation tabs: Menu, General, Spells, Modules, Icon Hotkeys, Scripts and About.")
   bindHelpButton("menuLeftHelp", "Shortcuts to frequently used sections.")
   bindHelpButton("menuRightHelp", "General settings and project about.")
@@ -1104,7 +1285,7 @@ MainWindow
   bindHelpButton("backScriptsHelp", "Return to main menu.")
   bindHelpButton("backAboutHelp", "Return to main menu.")
   bindHelpButton("modulesHintHelp", "Enable/disable modules, assign hotkeys and open each script.")
-  bindHelpButton("hkHintHelp", "Rename actions, assign hotkeys and customize icons.")
+  bindHelpButton("hkHintHelp", "Rename actions, assign hotkeys and customize icons. Press Esc or click Cancel to abort key capture.")
   bindHelpButton("scriptStatusHelp", "Shows loading status and search results.")
   bindHelpButton("closeHelp", "Close setup window; does not disable the toolkit.")
   bindHelpButton("btnIconsHelp", "Open Icon Hotkeys to assign keys and configure icons.")
@@ -1183,6 +1364,22 @@ MainWindow
     end
   end
 
+
+  local leaderTargetName = dtResolve(dtWindow, "leaderTargetName")
+  if leaderTargetName then
+    leaderTargetName.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      cfg.leaderTargetName = text
+    end
+  end
+
+  local leaderTargetCooldown = dtResolve(dtWindow, "leaderTargetCooldown")
+  if leaderTargetCooldown then
+    leaderTargetCooldown.onTextChange = function(_, text)
+      if dtRefreshing then return end
+      cfg.leaderTargetSwitchCooldownMs = tonumber(text) or 200
+    end
+  end
   -- Spells bindings
   local ueSpell = dtResolve(dtWindow, "ueSpell")
   if ueSpell then
@@ -1291,6 +1488,7 @@ MainWindow
   bindModuleSwitch("cutWg", "modCutWgSwitch")
   bindModuleSwitch("stamina", "modStaminaSwitch")
   bindModuleSwitch("spellwand", "modSpellwandSwitch")
+  bindModuleSwitch("leaderTarget", "modLeaderTargetSwitch")
 
   -- Scripts viewer/editor (load, edit, save)
   do
@@ -1534,24 +1732,30 @@ MainWindow
   bindModuleOpen("modCutWgOpen", "cutWgMacro = macro")
   bindModuleOpen("modStaminaOpen", "staminaMacro = macro")
   bindModuleOpen("modSpellwandOpen", "spellwandMacro = macro")
+  bindModuleOpen("modLeaderTargetOpen", "-- Leader Target Assist")
 
   -- Hotkey binding helper: Set / Clear
-  local function bindHotkeyRow(actionKey, keyId, setId, clearId)
+  local function bindHotkeyRow(actionKey, keyId, setId, clearId, usePopupCapture)
     local keyWidget = dtResolve(dtWindow, keyId)
     local setButton = dtResolve(dtWindow, setId)
     local clearButton = dtResolve(dtWindow, clearId)
 
     if keyWidget then
-      keyWidget.onTextChange = function(widget, text)
-        if dtRefreshing then return end
-        local normalized = serializeHotkeyList(parseHotkeyList(text), ";")
-        cfg.hk[actionKey] = normalized
-      end
+      if keyWidget.setReadOnly then pcall(keyWidget.setReadOnly, keyWidget, true) end
+      if keyWidget.setEditable then pcall(keyWidget.setEditable, keyWidget, false) end
+      if keyWidget.setFocusable then pcall(keyWidget.setFocusable, keyWidget, false) end
+      keyWidget.onTextChange = nil
+      keyWidget.onClick = function() end
+      keyWidget.onDoubleClick = function() end
     end
 
     local function startCapture()
-      HK_CAPTURE = { action = actionKey }
-      safeSetText(keyWidget, "Press...")
+      if usePopupCapture == true then
+        dtOpenHotkeyCapturePrompt(actionKey, keyWidget)
+      else
+        HK_CAPTURE = { action = actionKey, keyWidget = keyWidget }
+        safeSetText(keyWidget, "Press...")
+      end
     end
 
     if setButton then
@@ -1565,25 +1769,28 @@ MainWindow
     end
   end
 
-  bindHotkeyRow("caveToggle", "caveToggleKey", "caveToggleSet", "caveToggleClear")
-  bindHotkeyRow("targetToggle", "targetToggleKey", "targetToggleSet", "targetToggleClear")
-  bindHotkeyRow("antiParalyze", "modAntiParalyzeKey", "modAntiParalyzeSet", "modAntiParalyzeClear")
-  bindHotkeyRow("autoHaste", "modAutoHasteKey", "modAutoHasteSet", "modAutoHasteClear")
-  bindHotkeyRow("autoHeal", "modAutoHealKey", "modAutoHealSet", "modAutoHealClear")
-  bindHotkeyRow("ringSwap", "modRingSwapKey", "modRingSwapSet", "modRingSwapClear")
-  bindHotkeyRow("magicWall", "modMagicWallKey", "modMagicWallSet", "modMagicWallClear")
-  bindHotkeyRow("mwScroll", "mwScrollSpellKey", "mwScrollSpellSet", "mwScrollSpellClear")
-  bindHotkeyRow("manaPot", "modManaPotKey", "modManaPotSet", "modManaPotClear")
-  bindHotkeyRow("cutWg", "modCutWgKey", "modCutWgSet", "modCutWgClear")
-  bindHotkeyRow("stamina", "modStaminaKey", "modStaminaSet", "modStaminaClear")
-  bindHotkeyRow("spellwand", "modSpellwandKey", "modSpellwandSet", "modSpellwandClear")
-  bindHotkeyRow("ueNonSafe", "ueNonSafeKey", "ueNonSafeSet", "ueNonSafeClear")
-  bindHotkeyRow("ueSafe", "ueSafeKey", "ueSafeSet", "ueSafeClear")
-  bindHotkeyRow("superSd", "superSdKey", "superSdSet", "superSdClear")
-  bindHotkeyRow("superSdFire", "superSdFireKey", "superSdFireSet", "superSdFireClear")
-  bindHotkeyRow("superSdHoly", "superSdHolyKey", "superSdHolySet", "superSdHolyClear")
-  bindHotkeyRow("sioVip", "sioVipKey", "sioVipSet", "sioVipClear")
-  bindHotkeyRow("followToggle", "followToggleKey", "followToggleSet", "followToggleClear")
+  bindHotkeyRow("caveToggle", "caveToggleKey", "caveToggleSet", "caveToggleClear", true)
+  bindHotkeyRow("targetToggle", "targetToggleKey", "targetToggleSet", "targetToggleClear", true)
+  bindHotkeyRow("antiParalyze", "modAntiParalyzeKey", "modAntiParalyzeSet", "modAntiParalyzeClear", true)
+  bindHotkeyRow("autoHaste", "modAutoHasteKey", "modAutoHasteSet", "modAutoHasteClear", true)
+  bindHotkeyRow("autoHeal", "modAutoHealKey", "modAutoHealSet", "modAutoHealClear", true)
+  bindHotkeyRow("ringSwap", "modRingSwapKey", "modRingSwapSet", "modRingSwapClear", true)
+  bindHotkeyRow("magicWall", "modMagicWallKey", "modMagicWallSet", "modMagicWallClear", true)
+  bindHotkeyRow("mwScroll", "mwScrollSpellKey", "mwScrollSpellSet", "mwScrollSpellClear", true)
+  bindHotkeyRow("manaPot", "modManaPotKey", "modManaPotSet", "modManaPotClear", true)
+  bindHotkeyRow("cutWg", "modCutWgKey", "modCutWgSet", "modCutWgClear", true)
+  bindHotkeyRow("stamina", "modStaminaKey", "modStaminaSet", "modStaminaClear", true)
+  bindHotkeyRow("spellwand", "modSpellwandKey", "modSpellwandSet", "modSpellwandClear", true)
+  bindHotkeyRow("leaderTarget", "modLeaderTargetKey", "modLeaderTargetSet", "modLeaderTargetClear", true)
+
+  bindHotkeyRow("ueNonSafe", "ueNonSafeKey", "ueNonSafeSet", "ueNonSafeClear", true)
+  bindHotkeyRow("ueSafe", "ueSafeKey", "ueSafeSet", "ueSafeClear", true)
+  bindHotkeyRow("superSd", "superSdKey", "superSdSet", "superSdClear", true)
+  bindHotkeyRow("superSdFire", "superSdFireKey", "superSdFireSet", "superSdFireClear", true)
+  bindHotkeyRow("superSdHoly", "superSdHolyKey", "superSdHolySet", "superSdHolyClear", true)
+  bindHotkeyRow("sioVip", "sioVipKey", "sioVipSet", "sioVipClear", true)
+  bindHotkeyRow("followToggle", "followToggleKey", "followToggleSet", "followToggleClear", true)
+  bindHotkeyRow("leaderTarget", "leaderTargetKey", "leaderTargetSet", "leaderTargetClear", true)
 
   -- Editable action labels + per-action tools menu
   bindActionNameWidget("caveToggle", "caveToggleLabel", "caveToggleHelp")
@@ -1595,6 +1802,9 @@ MainWindow
   bindActionNameWidget("superSdHoly", "superSdHolyLabel", "superSdHolyHelp")
   bindActionNameWidget("sioVip", "sioVipLabel", "sioVipHelp")
   bindActionNameWidget("followToggle", "followToggleLabel", "followToggleHelp")
+  bindActionNameWidget("leaderTarget", "leaderTargetLabel", "leaderTargetHelp")
+
+  dtWindow._dtOpenHotkeyCapturePrompt = dtOpenHotkeyCapturePrompt
   dtShowPage("pageMenu")
   dtRefresh()
   return true
@@ -2239,6 +2449,12 @@ local iconFollow = addIcon("dt_Follow_Icon", { item = 3031, text = "FLW" }, func
   if icon and icon._dtSuppress then return end
   dtSetActionOn("followToggle", isOn, "icon")
 end)
+
+local iconLeaderTarget = addIcon("dt_LeaderTarget_Icon", { item = 3447, text = "LTA" }, function(icon, isOn)
+  if icon and icon._dtSuppress then return end
+  dtSetActionOn("leaderTarget", isOn, "icon")
+end)
+
 -- Register actions for hotkeys + context menu + sync.
 dtRegisterAction("caveToggle", {
   label = "CaveBot (Toggle)",
@@ -2311,7 +2527,8 @@ local DT_ACTION_UI = {
   superSdFire = { keyId = "superSdFireKey" },
   superSdHoly = { keyId = "superSdHolyKey" },
   sioVip = { keyId = "sioVipKey" },
-  followToggle = { keyId = "followToggleGeneralKey" },
+  followToggle = { keyId = "followToggleKey" },
+  leaderTarget = { keyId = "leaderTargetKey" },
 }
 
 local function dtIsShiftDown()
@@ -2330,10 +2547,14 @@ local function dtStartHotkeyCapture(actionKey)
   local targetPage = (a and a.setupPage) or "pageHotkeys"
   dtOpen()
   dtShowPage(targetPage)
-  HK_CAPTURE = { action = actionKey }
   local ids = DT_ACTION_UI[actionKey]
   local keyWidget = ids and dtResolve(dtWindow, ids.keyId) or nil
-  safeSetText(keyWidget, "Press...")
+  if dtWindow and dtWindow._dtOpenHotkeyCapturePrompt then
+    dtWindow._dtOpenHotkeyCapturePrompt(actionKey, keyWidget)
+  else
+    HK_CAPTURE = { action = actionKey, keyWidget = keyWidget }
+    safeSetText(keyWidget, "Press...")
+  end
 end
 
 local function dtOpenScriptViewer(relPath, query)
@@ -2416,7 +2637,30 @@ onKeyDown(function(keys)
   if chatTyping() then return end
 
   if HK_CAPTURE and HK_CAPTURE.action then
-    setHotkeySet(HK_CAPTURE.action, keys)
+    local keyName = tostring(keys or "")
+    local keyLower = keyName:lower()
+
+    if keyLower == "escape" or keyLower == "esc" then
+      if HK_CAPTURE.window and HK_CAPTURE.window.destroy and not HK_CAPTURE.window._dtDestroyed then
+        pcall(HK_CAPTURE.window.destroy, HK_CAPTURE.window)
+      end
+      HK_CAPTURE = nil
+      dtRefresh()
+      return
+    end
+
+    if HK_CAPTURE.window then
+      HK_CAPTURE.pending = keyName
+      if HK_CAPTURE.valueText then
+        safeSetText(HK_CAPTURE.valueText, "[" .. keyName .. "]")
+      end
+      if HK_CAPTURE.keyWidget then
+        safeSetText(HK_CAPTURE.keyWidget, keyName)
+      end
+      return
+    end
+
+    setHotkeySet(HK_CAPTURE.action, keyName)
     HK_CAPTURE = nil
     dtRefresh()
     return
@@ -2459,6 +2703,7 @@ onKeyDown(function(keys)
   if hotkeyMatches("cutWg", keys) then dtToggleAction("cutWg") return end
   if hotkeyMatches("stamina", keys) then dtToggleAction("stamina") return end
   if hotkeyMatches("spellwand", keys) then dtToggleAction("spellwand") return end
+  if hotkeyMatches("leaderTarget", keys) then dtToggleAction("leaderTarget") return end
 
   if hotkeyMatches("ueNonSafe", keys) then dtToggleAction("ueNonSafe") return end
   if hotkeyMatches("ueSafe", keys) then dtToggleAction("ueSafe") return end
@@ -2612,6 +2857,8 @@ dtRegisterAction("followToggle", {
   setupPage = "pageGeneral",
 })
 
+
+
 onCreaturePositionChange(function(creature, newPos, oldPos)
   if not isEnabled() then return end
   if ultimateFollow.isOff() then return end
@@ -2670,6 +2917,109 @@ onCreatureDisappear(function(creature)
   end
 end)
 
+-- Leader Target Assist (missile-based)
+local leaderTargetLockedId = nil
+local leaderTargetLastSwitchAt = 0
+
+leaderTargetToggleMacro = {
+  isOn = function()
+    return cfg.mods and cfg.mods.leaderTarget == true
+  end,
+  setOn = function(v)
+    cfg.mods = cfg.mods or {}
+    cfg.mods.leaderTarget = (v == true)
+  end
+}
+
+local function ltNameEq(a, b)
+  if not a or not b then return false end
+  return tostring(a):lower() == tostring(b):lower()
+end
+
+local function ltIsFriend(name)
+  if not name or type(name) ~= "string" then return false end
+  if not storage or not storage.playerList or not storage.playerList.friendList then return false end
+  local list = storage.playerList.friendList
+  if table.find then
+    return table.find(list, name, true) ~= nil
+  end
+  for _, n in ipairs(list) do
+    if ltNameEq(n, name) then return true end
+  end
+  return false
+end
+
+local function ltCanSwitchNow()
+  local cd = tonumber(cfg.leaderTargetSwitchCooldownMs) or 200
+  if cd < 0 then cd = 0 end
+  return (now - leaderTargetLastSwitchAt) >= cd
+end
+
+local function ltTryAttack(targetCreature)
+  if not targetCreature or not targetCreature.isCreature or not targetCreature:isCreature() then return end
+  if not targetCreature.getId then return end
+
+  local tid = targetCreature:getId()
+  if not tid then return end
+  if leaderTargetLockedId == tid then return end
+
+  local myTarget = g_game.getAttackingCreature and g_game.getAttackingCreature() or nil
+  if myTarget and myTarget.getId and myTarget:getId() == tid then
+    leaderTargetLockedId = tid
+    return
+  end
+
+  if not ltCanSwitchNow() then return end
+  if not g_game or not g_game.attack then return end
+
+  g_game.attack(targetCreature)
+  leaderTargetLockedId = tid
+  leaderTargetLastSwitchAt = now
+end
+
+onMissle(function(missle)
+  if not isEnabled() then return end
+  if not (cfg.mods and cfg.mods.leaderTarget == true) then return end
+
+  local leaderName = _trim(cfg.leaderTargetName or cfg.followLeader or "")
+  if leaderName:len() == 0 then return end
+  if not missle then return end
+
+  local srcPos = missle.getSource and missle:getSource() or nil
+  local dstPos = missle.getDestination and missle:getDestination() or nil
+  if not srcPos or not dstPos then return end
+  if srcPos.z ~= posz() then return end
+
+  local fromTile = g_map.getTile(srcPos)
+  local toTile = g_map.getTile(dstPos)
+  if not fromTile or not toTile then return end
+
+  local fromCreatures = fromTile.getCreatures and fromTile:getCreatures() or {}
+  local toCreatures = toTile.getCreatures and toTile:getCreatures() or {}
+  if #fromCreatures ~= 1 or #toCreatures ~= 1 then return end
+
+  local shooter = fromCreatures[1]
+  local target = toCreatures[1]
+  if not shooter or not target then return end
+  if shooter == target then return end
+
+  local shooterName = shooter.getName and shooter:getName() or ""
+  if not ltNameEq(shooterName, leaderName) then return end
+
+  local targetName = target.getName and target:getName() or ""
+  if ltNameEq(targetName, leaderName) then return end
+  if ltIsFriend(targetName) then return end
+
+  ltTryAttack(target)
+end)
+
+onCreatureDisappear(function(creature)
+  if not creature or not creature.getId then return end
+  if leaderTargetLockedId and creature:getId() == leaderTargetLockedId then
+    leaderTargetLockedId = nil
+  end
+end)
+
 -- Spellwand
 local spellwandMacro
 spellwandMacro = macro(1000, function()
@@ -2696,6 +3046,7 @@ manaPotMacro.setOn(cfg.mods.manaPot == true)
 cutWgMacro.setOn(cfg.mods.cutWg == true)
 staminaMacro.setOn(cfg.mods.stamina == true)
 spellwandMacro.setOn(cfg.mods.spellwand == true)
+leaderTargetToggleMacro.setOn(cfg.mods.leaderTarget == true)
 
 -- Register module actions (UI + hotkeys; persisted)
 dtRegisterAction("antiParalyze", {
@@ -2788,6 +3139,16 @@ dtRegisterAction("spellwand", {
   setupPage = "pageModules",
 })
 
+dtRegisterAction("leaderTarget", {
+  label = "Leader Target",
+  macro = leaderTargetToggleMacro,
+  icon = iconLeaderTarget,
+  persist = true,
+  script = "scripts/druid_toolkit.lua",
+  scriptQuery = "-- Leader Target Assist",
+  setupPage = "pageGeneral",
+})
+
 -- Final sync after all actions are registered (including follow + modules).
 for k, a in pairs(DT_ACTIONS) do
   dtAttachIconContextMenu(k)
@@ -2798,6 +3159,17 @@ for k, a in pairs(DT_ACTIONS) do
   end
 end
 log("Loaded.")
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -8,6 +8,9 @@ Main idea:
 - stop pasting huge scripts into the *Ingame Script Editor*
 - use a **loader-based** workflow: a tiny stable loader loads real `.lua` files from the repo
 
+Optional donation (if my scripts helped you):
+- https://paypal.me/eddielol
+
 ## Video (YouTube)
 
 - https://www.youtube.com/watch?v=2BEvy-Cac7M

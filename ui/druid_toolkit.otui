@@ -332,6 +332,7 @@ DruidToolkitSetupWindow < MainWindow
           margin-top: 12
           margin-left: 8
           margin-right: 8
+          margin-bottom: 26
           layout:
             type: verticalBox
             fit-children: false
@@ -561,6 +562,63 @@ DruidToolkitSetupWindow < MainWindow
               height: 20
               tooltip: Nombre del player a seguir (Follow macro).
 
+
+          Panel
+            id: rowLeaderTargetName
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Leader Target Name
+              width: 170
+
+            DtHelpButton
+              id: leaderTargetNameHelp
+              anchors.right: leaderTargetName.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Player name used by Leader Target Assist missile detection.
+
+            TextEdit
+              id: leaderTargetName
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 220
+              height: 20
+              tooltip: Exact leader name for Leader Target Assist.
+
+          Panel
+            id: rowLeaderTargetCooldown
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Leader Target CD (ms)
+              width: 170
+
+            DtHelpButton
+              id: leaderTargetCooldownHelp
+              anchors.right: leaderTargetCooldown.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Minimum milliseconds between target switches (anti-flicker).
+
+            TextEdit
+              id: leaderTargetCooldown
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 140
+              height: 20
+              tooltip: Switch cooldown in milliseconds (example: 200).
+
       Panel
         id: pageSpells
         anchors.fill: parent
@@ -603,6 +661,7 @@ DruidToolkitSetupWindow < MainWindow
           margin-top: 12
           margin-left: 8
           margin-right: 8
+          margin-bottom: 26
           layout:
             type: verticalBox
             fit-children: false
@@ -975,6 +1034,7 @@ DruidToolkitSetupWindow < MainWindow
           margin-top: 12
           margin-left: 8
           margin-right: 8
+          margin-bottom: 26
           layout:
             type: verticalBox
             fit-children: false
@@ -1558,6 +1618,71 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Open
 
+
+          Panel
+            id: rowModLeaderTarget
+            height: 28
+
+            BotSwitch
+              id: modLeaderTargetSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modLeaderTargetSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Leader Target Assist
+
+            DtHelpButton
+              id: modLeaderTargetHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Missile-based assist: attacks what your leader attacks.
+
+            TextEdit
+              id: modLeaderTargetKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modLeaderTargetClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modLeaderTargetSet
+              anchors.right: modLeaderTargetClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modLeaderTargetOpen
+              anchors.right: modLeaderTargetSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
       Panel
         id: pageHotkeys
         anchors.fill: parent
@@ -1598,7 +1723,7 @@ DruidToolkitSetupWindow < MainWindow
           anchors.right: parent.right
           margin-top: 8
           text-align: center
-          text: Set replaces, Clear removes. Press a key (chat-safe).
+          text: Set replaces, Clear removes, Esc cancels capture (chat-safe).
           color: #cccccc
 
 
@@ -2116,6 +2241,60 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               text: Set
 
+
+          Panel
+            id: rowLeaderTarget
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: leaderTargetLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Leader Target
+              width: 180
+              color: #ffffff
+
+            DtHelpButton
+              id: leaderTargetHelp
+              anchors.left: leaderTargetLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey for Leader Target Assist toggle.
+
+            TextEdit
+              id: leaderTargetKey
+              anchors.left: leaderTargetHelp.right
+              anchors.right: leaderTargetSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: leaderTargetClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: leaderTargetSet
+              anchors.right: leaderTargetClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
       Panel
         id: pageScripts
         anchors.fill: parent
@@ -2377,6 +2556,7 @@ DruidToolkitSetupWindow < MainWindow
           margin-top: 12
           margin-left: 8
           margin-right: 8
+          margin-bottom: 26
           layout:
             type: verticalBox
             fit-children: false
@@ -2406,6 +2586,22 @@ DruidToolkitSetupWindow < MainWindow
             text: "github.com/eduardogallifaochoa/otcv8-eddiexo-scripts"
             color: #cccccc
 
+          Button
+            id: aboutDonate
+            height: 26
+            text: "Optional donation (if my scripts helped you)"
+
+          DtHelpButton
+            id: aboutDonateHelp
+            height: 20
+            width: 22
+            text: ?
+            tooltip: Optional support link (PayPal donation).
+
+          Label
+            id: aboutDonateUrl
+            text: "paypal.me/eddielol"
+            color: #cccccc
     HorizontalSeparator
       id: sepBottom
       anchors.left: parent.left
@@ -2465,6 +2661,8 @@ DruidToolkitSetupWindow < MainWindow
         height: 20
         text: ?
         tooltip: Close setup window (does not disable modules).
+
+
 
 
 

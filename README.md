@@ -11,6 +11,9 @@ La idea principal:
 GitHub:
 - https://github.com/eduardogallifaochoa/otcv8-eddiexo-scripts
 
+Donacion opcional (si mis scripts te sirvieron):
+- https://paypal.me/eddielol
+
 ## Video (YouTube)
 
 - https://www.youtube.com/watch?v=2BEvy-Cac7M
@@ -53,6 +56,21 @@ No se suben scripts comprados/bitlocked.
 Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
 
 ## Bitacora / Changelog
+### 2026-02-15
+
+- Leader Target Assist (General) simplificado:
+  - se elimino `Leader Target Only No Target` (UI + bind + runtime)
+  - quedan solo `Leader Target Name` y `Leader Target CD (ms)`
+- Hotkeys mas robustas en `Icon Hotkeys` y `Modules`:
+  - los campos de hotkey quedaron de solo lectura (no capturan por click)
+  - captura de hotkey solo por boton `Set`
+  - `Esc` cancela captura sin guardar hotkey accidental
+- Fix de estabilidad de popup de captura:
+  - guard para evitar `destroy widget ... two times`
+  - cierre seguro de ventana antes de abrir nueva captura
+- UI layout:
+  - `modulesScroll` con margen inferior para que `Leader Target Assist` ya no se corte abajo
+
 ### 2026-02-14
 
 - Fix al `_Loader.lua` para no romper cuando falta algun script en `vBot/`:
@@ -105,4 +123,5 @@ Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
   - Tabs + menu + footer signature
   - Scripts viewer con search + scrollbar
   - Modules tab (toggles + hotkeys para modulos)
+
 
