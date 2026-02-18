@@ -86,9 +86,25 @@ do
   -- IMPORTANT: in this bot sandbox, `dofile()` resolves paths relative to the current config dir
   -- (e.g. /bot/<profile>/). Passing absolute /bot/<profile>/... can get double-prefixed.
   __druid_toolkit_profile = configName
-  local ok, err = pcall(dofile, "bot_loaders/druid_toolkit_loader.lua")
-  if not ok then
-    print("[_Loader] Failed loading druid toolkit loader: " .. tostring(err))
+  local loaded = false
+
+  -- 1) Preferred portable mode: single-file toolkit in profile root.
+  do
+    local ok, err = pcall(dofile, "druid_toolkit_single.lua")
+    if ok then
+      loaded = true
+      print("[_Loader] Loaded druid_toolkit_single.lua")
+    else
+      print("[_Loader] Single-file toolkit not loaded (" .. tostring(err) .. ")")
+    end
+  end
+
+  -- 2) Fallback: classic loader-based structure.
+  if not loaded then
+    local ok, err = pcall(dofile, "bot_loaders/druid_toolkit_loader.lua")
+    if not ok then
+      print("[_Loader] Failed loading druid toolkit loader: " .. tostring(err))
+    end
   end
 end
 
