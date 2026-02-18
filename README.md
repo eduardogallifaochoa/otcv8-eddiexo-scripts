@@ -40,6 +40,16 @@ Snippet (si quieres pegar SOLO una vez en Ingame Script Editor):
 dofile('bot_loaders/druid_toolkit_loader.lua')
 ```
 
+Portable single-file (para arrastrar a otros bots):
+- archivo generado: `druid_toolkit_single.lua`
+- rebuild:
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/build_druid_toolkit_single.ps1
+```
+- uso en Ingame Script Editor:
+```lua
+dofile('druid_toolkit_single.lua')
+```
 ## Goals (si sigo con esto)
 
 Realisticamente le voy a meter hasta el **27-Feb-2026** (sale Resident Evil Requiem), pero los goals:
@@ -56,6 +66,14 @@ No se suben scripts comprados/bitlocked.
 Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
 
 ## Bitacora / Changelog
+### 2026-02-18
+
+- Se removio `INSPIRACION_NOTES.md` (solo era nota temporal de analisis).
+- Se agrego build portable single-file del toolkit:
+  - `tools/build_druid_toolkit_single.ps1`
+  - `druid_toolkit_single.lua` (autogenerado)
+- `scripts/druid_toolkit.lua` ahora acepta OTUI inline (`__druid_toolkit_otui_inline`) para que el single-file funcione sin dependencias externas.
+- Se marca este push como **ultimo push por ahora**: estado funcional estable.
 ### 2026-02-15
 
 - Leader Target Assist (General) simplificado:
@@ -123,5 +141,7 @@ Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
   - Tabs + menu + footer signature
   - Scripts viewer con search + scrollbar
   - Modules tab (toggles + hotkeys para modulos)
+
+
 
 

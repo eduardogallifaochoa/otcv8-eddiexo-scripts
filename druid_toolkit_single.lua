@@ -1,3 +1,2711 @@
+﻿-- AUTO-GENERATED FILE. DO NOT EDIT BY HAND.
+-- Build command:
+--   powershell -ExecutionPolicy Bypass -File tools/build_druid_toolkit_single.ps1
+--
+-- Portable single-file Druid Toolkit:
+-- 1) Copy this file into any bot profile folder.
+-- 2) Run from Ingame Script Editor with:
+--    dofile('druid_toolkit_single.lua')
+
+__druid_toolkit_otui_inline = [==[
+DtHelpButton < Button
+  width: 22
+  height: 20
+  text: ?
+  font: verdana-11px-rounded
+  color: #ffffff
+  text-align: center
+  background-color: #00000088
+  border-width: 1
+  border-color: #ffffff44
+
+  $hover:
+    background-color: #000000aa
+    border-color: #ffffff88
+DtNavButton < Button
+  font: verdana-11px-rounded
+  color: #e6e6e6
+  background-color: #ffffff12
+  border-width: 1
+  border-color: #ffffff26
+
+  $hover:
+    background-color: #ffffff18
+
+DtCard < Panel
+  padding: 10
+  image-source: /images/ui/panel_flat
+  image-border: 6
+  background-color: #00000066
+  border-width: 1
+  border-color: #ffffff22
+
+DtCardScroll < ScrollablePanel
+  padding: 10
+  image-source: /images/ui/panel_flat
+  image-border: 6
+  background-color: #00000066
+  border-width: 1
+  border-color: #ffffff22
+
+DtHotkeyBadge < Label
+  background-color: alpha
+  font: terminus-10px
+  color: #ffffff
+  text-align: center
+  text-offset: 1 0
+  focusable: false
+  anchors.right: parent.right
+  anchors.top: parent.top
+  margin-right: 1
+  margin-top: 1
+
+
+DruidToolkitSetupWindow < MainWindow
+  id: dtSetupWindow
+  !text: tr('Druid Toolkit')
+  size: 920 600
+  padding: 12
+  draggable: true
+  @onEscape: self:hide()
+
+  Panel
+    id: content
+    anchors.fill: parent
+    padding: 10
+
+    Label
+      id: header
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 20
+      text-align: center
+      text: [Setup]
+      font: verdana-11px-rounded
+      color: #ffaa00
+
+    HorizontalSeparator
+      id: sepTop
+      anchors.top: header.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+
+    Panel
+      id: navBar
+      anchors.top: sepTop.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 22
+      margin-top: 8
+      padding: 3
+      image-source: /images/ui/panel_flat
+      image-border: 6
+      background-color: #00000055
+      border-width: 1
+      border-color: #ffffff22
+      layout:
+        type: horizontalBox
+        fit-children: false
+        spacing: 0
+
+      DtNavButton
+        id: navMenu
+        width: 70
+        height: 20
+        text: Menu
+        margin-right: 6
+
+      DtNavButton
+        id: navGeneral
+        width: 80
+        height: 20
+        text: General
+        margin-right: 6
+
+      DtNavButton
+        id: navSpells
+        width: 70
+        height: 20
+        text: Spells
+        margin-right: 6
+
+      DtNavButton
+        id: navModules
+        width: 80
+        height: 20
+        text: Modules
+        margin-right: 6
+
+      DtNavButton
+        id: navHotkeys
+        width: 110
+        height: 20
+        text: Icon Hotkeys
+        margin-right: 6
+
+      DtNavButton
+        id: navScripts
+        width: 70
+        height: 20
+        text: Scripts
+
+      DtNavButton
+        id: navAbout
+        width: 70
+        height: 20
+        text: About
+
+
+      DtHelpButton
+        id: navHelp
+        width: 22
+        height: 20
+        text: ?
+        tooltip: Quick setup tab navigation.
+    Panel
+      id: pages
+      anchors.top: navBar.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: sepBottom.top
+      margin-top: 10
+      margin-bottom: 10
+
+      Panel
+        id: pageMenu
+        anchors.fill: parent
+
+        Label
+          id: menuLeftTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 300
+          text-align: center
+          text: Shortcuts
+          font: verdana-11px-rounded
+          color: #ffffff
+
+
+        DtHelpButton
+          id: menuLeftHelp
+          anchors.left: menuLeftTitle.right
+          anchors.verticalCenter: menuLeftTitle.verticalCenter
+          margin-left: 6
+          width: 22
+          height: 20
+          text: ?
+          tooltip: Atajos rapidos a las secciones mas usadas.
+        Label
+          id: menuRightTitle
+          anchors.top: parent.top
+          anchors.right: parent.right
+          width: 300
+          text-align: center
+          text: Settings
+          font: verdana-11px-rounded
+          color: #ffffff
+
+
+        DtHelpButton
+          id: menuRightHelp
+          anchors.right: parent.right
+          anchors.verticalCenter: menuRightTitle.verticalCenter
+          width: 22
+          height: 20
+          text: ?
+          tooltip: General toolkit settings.
+        DtCard
+          id: menuLeft
+          anchors.top: menuLeftTitle.bottom
+          anchors.left: parent.left
+          anchors.bottom: parent.bottom
+          width: 300
+          margin-top: 12
+          layout:
+            type: verticalBox
+            fit-children: false
+            spacing: 10
+
+          Button
+            id: btnIcons
+            height: 34
+            text: Icon Hotkeys
+
+          DtHelpButton
+            id: btnIconsHelp
+            height: 18
+            tooltip: Open Icon Hotkeys to assign keys and icon settings.
+
+          Button
+            id: btnSpellsMenu
+            height: 34
+            text: Spells
+
+          DtHelpButton
+            id: btnSpellsMenuHelp
+            height: 18
+            tooltip: Open Spells to configure spell values.
+
+          Button
+            id: btnModules
+            height: 34
+            text: Modules
+
+          DtHelpButton
+            id: btnModulesHelp
+            height: 18
+            tooltip: Open Modules for toggles, hotkeys, and Open Script.
+
+          Button
+            id: btnScriptsMenu
+            height: 34
+            text: Scripts
+
+          DtHelpButton
+            id: btnScriptsMenuHelp
+            height: 18
+            tooltip: Open Scripts viewer with search.
+
+        DtCard
+          id: menuRight
+          anchors.top: menuRightTitle.bottom
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          width: 300
+          margin-top: 12
+          layout:
+            type: verticalBox
+            fit-children: false
+            spacing: 10
+
+          Button
+            id: btnGeneral
+            height: 34
+            text: General
+
+          DtHelpButton
+            id: btnGeneralHelp
+            height: 18
+            tooltip: Open global toolkit settings.
+
+          Button
+            id: btnAbout
+            height: 34
+            text: About
+
+          DtHelpButton
+            id: btnAboutHelp
+            height: 18
+            tooltip: Open project and repository info.
+
+      Panel
+        id: pageGeneral
+        anchors.fill: parent
+
+        Label
+          id: generalTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [General]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backGeneral
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+
+        DtHelpButton
+          id: backGeneralHelp
+          anchors.left: backGeneral.right
+          anchors.verticalCenter: backGeneral.verticalCenter
+          margin-left: 6
+          width: 22
+          height: 18
+          text: ?
+          tooltip: Return to main menu.
+        DtCardScroll
+          id: generalScroll
+          anchors.top: generalTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          margin-left: 8
+          margin-right: 8
+          margin-bottom: 26
+          layout:
+            type: verticalBox
+            fit-children: false
+            spacing: 8
+
+          Panel
+            id: rowEnabled
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Toolkit Enabled
+              width: 170
+
+            BotSwitch
+              id: enabledSwitch
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 100
+              text-align: center
+              text: Enabled
+
+
+            DtHelpButton
+              id: enabledHelp
+              anchors.right: enabledSwitch.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Prende/apaga TODO el Druid Toolkit.
+          Panel
+            id: rowHideEffects
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Hide Effects
+              width: 170
+
+            BotSwitch
+              id: hideEffectsSwitch
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 100
+              text-align: center
+              text: On
+
+
+            DtHelpButton
+              id: hideEffectsHelp
+              anchors.right: hideEffectsSwitch.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hide visual effects.
+          Panel
+            id: rowHideTexts
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Hide Orange Texts
+              width: 170
+
+            BotSwitch
+              id: hideTextsSwitch
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 100
+              text-align: center
+              text: On
+
+
+            DtHelpButton
+              id: hideTextsHelp
+              anchors.right: hideTextsSwitch.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hide orange floating texts.
+          Panel
+            id: rowStopKey
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Stop CaveBot Key
+              width: 170
+
+            DtHelpButton
+              id: stopCaveHelp
+              anchors.right: stopCaveKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to pause/resume CaveBot. Example: Pause or F10.
+
+            TextEdit
+              id: stopCaveKey
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 140
+              height: 20
+              tooltip: Hotkey to pause/resume only CaveBot (example: Pause).
+
+          Panel
+            id: rowStopTargetKey
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Stop TargetBot Key
+              width: 170
+
+            DtHelpButton
+              id: stopTargetHelp
+              anchors.right: stopTargetKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to pause/resume TargetBot. Example: Pause or F11.
+
+            TextEdit
+              id: stopTargetKey
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 140
+              height: 20
+              tooltip: Hotkey to pause/resume only TargetBot (example: Pause).
+
+          Panel
+            id: rowToolkitToggleKey
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Toolkit Toggle Key
+              width: 170
+
+            DtHelpButton
+              id: toolkitToggleHelp
+              anchors.right: toolkitToggleKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Global hotkey to enable/disable the whole toolkit (example: F12).
+
+            TextEdit
+              id: toolkitToggleKey
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 140
+              height: 20
+              tooltip: Hotkey global del toolkit (ej: F12).
+
+          Panel
+            id: rowFollowToggleGeneralKey
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Follow Toggle Key
+              width: 170
+
+            DtHelpButton
+              id: followToggleGeneralHelp
+              anchors.right: followToggleGeneralKey.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Follow Leader.
+
+            TextEdit
+              id: followToggleGeneralKey
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 140
+              height: 20
+              tooltip: Hotkey to toggle Follow Leader.
+
+          Panel
+            id: rowFollowLeader
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Follow Leader
+              width: 170
+
+            DtHelpButton
+              id: followLeaderHelp
+              anchors.right: followLeader.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Enter exact leader name to follow (example: Ada Wong).
+
+            TextEdit
+              id: followLeader
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 220
+              height: 20
+              tooltip: Nombre del player a seguir (Follow macro).
+
+
+          Panel
+            id: rowLeaderTargetName
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Leader Target Name
+              width: 170
+
+            DtHelpButton
+              id: leaderTargetNameHelp
+              anchors.right: leaderTargetName.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Player name used by Leader Target Assist missile detection.
+
+            TextEdit
+              id: leaderTargetName
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 220
+              height: 20
+              tooltip: Exact leader name for Leader Target Assist.
+
+          Panel
+            id: rowLeaderTargetCooldown
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Leader Target CD (ms)
+              width: 170
+
+            DtHelpButton
+              id: leaderTargetCooldownHelp
+              anchors.right: leaderTargetCooldown.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Minimum milliseconds between target switches (anti-flicker).
+
+            TextEdit
+              id: leaderTargetCooldown
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 140
+              height: 20
+              tooltip: Switch cooldown in milliseconds (example: 200).
+
+      Panel
+        id: pageSpells
+        anchors.fill: parent
+
+        Label
+          id: spellsTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [Spells]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backSpells
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+
+        DtHelpButton
+          id: backSpellsHelp
+          anchors.left: backSpells.right
+          anchors.verticalCenter: backSpells.verticalCenter
+          margin-left: 6
+          width: 22
+          height: 18
+          text: ?
+          tooltip: Return to main menu.
+        DtCardScroll
+          id: spellsScroll
+          anchors.top: spellsTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          margin-left: 8
+          margin-right: 8
+          margin-bottom: 26
+          layout:
+            type: verticalBox
+            fit-children: false
+            spacing: 8
+
+          Panel
+            id: rowUeSpell
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: UE Spell
+              width: 170
+
+            DtHelpButton
+              id: ueSpellHelp
+              anchors.right: ueSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Enter the exact UE spell (example: exevo gran mas frigo).
+
+            TextEdit
+              id: ueSpell
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 360
+              height: 20
+              font: terminus-10px
+              tooltip: El texto exacto del UE (ej: exevo gran mas frigo).
+
+          Panel
+            id: rowUeRepeat
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: UE Cast Count
+              width: 170
+
+            TextEdit
+              id: ueRepeat
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 80
+              height: 20
+              font: terminus-10px
+              tooltip: How many times UE is cast per activation.
+
+            DtHelpButton
+              id: ueRepeatHelp
+              anchors.right: ueRepeat.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 24
+              height: 20
+              text-align: center
+              text: ?
+              color: #cccccc
+              background-color: #00000066
+              border-width: 1
+              border-color: #ffffff22
+              focusable: true
+              tooltip: Cuantas veces se dice el UE cuando se activa (SAFE/NS).
+
+          Panel
+            id: rowAntiParalyze
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Anti Paralyze
+              width: 170
+
+            DtHelpButton
+              id: antiParalyzeSpellHelp
+              anchors.right: antiParalyzeSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Spell para quitar paralyze cuando estas paralizado.
+
+            TextEdit
+              id: antiParalyzeSpell
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 360
+              height: 20
+              font: terminus-10px
+              tooltip: Spell to remove paralyze (cast only while paralyzed).
+
+          Panel
+            id: rowHaste
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Auto Haste
+              width: 170
+
+            DtHelpButton
+              id: hasteSpellHelp
+              anchors.right: hasteSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Haste spell when haste is not active.
+
+            TextEdit
+              id: hasteSpell
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 360
+              height: 20
+              font: terminus-10px
+              tooltip: Haste spell (cast only if haste is missing).
+
+          Panel
+            id: rowHealSpell
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Auto Heal Spell
+              width: 170
+
+            DtHelpButton
+              id: healSpellHelp
+              anchors.right: healSpell.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Heal spell used when HP% <= Auto Heal %.
+
+            TextEdit
+              id: healSpell
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 360
+              height: 20
+              font: terminus-10px
+              tooltip: Heal spell (cast when HP% <= Auto Heal %).
+          Panel
+            id: rowHealPct
+            height: 22
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Auto Heal %
+              width: 170
+
+            DtHelpButton
+              id: healPercentHelp
+              anchors.right: healPercent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: HP percent threshold that triggers Auto Heal.
+
+            TextEdit
+              id: healPercent
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 80
+              height: 20
+              font: terminus-10px
+              tooltip: HP percent threshold that triggers Auto Heal (example: 95).
+
+          Panel
+            id: rowMwScrollSpell
+            height: 28
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: MW ScrollDown
+              width: 170
+
+            BotSwitch
+              id: mwScrollSpellSwitch
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            DtHelpButton
+              id: mwScrollSpellHelp
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 401
+              width: 22
+              height: 22
+              text: ?
+              tooltip: ON enables WheelDown/hotkey casting. Mode buttons below can still cast once manually.
+
+            TextEdit
+              id: mwScrollSpellKey
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 245
+              width: 150
+              height: 22
+              font: terminus-10px
+              tooltip: Hotkey to toggle MW ScrollDown ON/OFF (example: F12).
+
+            Button
+              id: mwScrollSpellClear
+              anchors.right: mwScrollSpellSwitch.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: mwScrollSpellSet
+              anchors.right: mwScrollSpellClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: mwScrollSpellOpen
+              anchors.right: mwScrollSpellSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+
+          Panel
+            id: rowMwScrollTarget
+            height: 28
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: MW/WG Cast Mode
+              width: 170
+
+            DtHelpButton
+              id: mwScrollTargetHelp
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 419
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Select what to cast/check. Magic Wall and Wild Growth also cast once when clicked.
+
+            Button
+              id: mwScrollModeMW
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 313
+              width: 100
+              height: 22
+              text: Magic Wall
+              tooltip: Use Magic Wall (rune 3180, block check 2128). Click to cast once.
+
+            Button
+              id: mwScrollModeWG
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 209
+              width: 100
+              height: 22
+              text: Wild Growth
+              tooltip: Use Wild Growth (rune 3156, block check 2130). Click to cast once.
+
+            Button
+              id: mwScrollModeCustom
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 127
+              width: 78
+              height: 22
+              text: Custom ID
+              tooltip: Use the Custom rune ID from the field at the right. Click to cast once.
+
+            TextEdit
+              id: mwScrollCustomId
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 120
+              height: 22
+              font: terminus-10px
+              text: 2128
+              tooltip: Custom rune item ID used in Custom mode (example: 3156).
+
+          Panel
+            id: rowMwHoldMark
+            height: 28
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Hold Mark Key
+              width: 170
+
+            DtHelpButton
+              id: mwHoldMarkHelp
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 209
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Key used to mark tiles for Hold (short press mark/unmark, hold 2.5s clear all). Example: .
+
+            TextEdit
+              id: mwHoldMarkKey
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 180
+              height: 22
+              font: terminus-10px
+              tooltip: Hold mark key (example: . or F9).
+
+      Panel
+        id: pageModules
+        anchors.fill: parent
+
+        Label
+          id: modulesTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [Modules]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backModules
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+
+        DtHelpButton
+          id: backModulesHelp
+          anchors.left: backModules.right
+          anchors.verticalCenter: backModules.verticalCenter
+          margin-left: 6
+          width: 22
+          height: 18
+          text: ?
+          tooltip: Return to main menu.
+        Label
+          id: modulesHint
+          anchors.top: modulesTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          margin-top: 8
+          height: 16
+          text-align: center
+          text: Toggle modules + assign hotkeys (chat-safe).
+          color: #cccccc
+
+
+        DtHelpButton
+          id: modulesHintHelp
+          anchors.right: parent.right
+          anchors.verticalCenter: modulesHint.verticalCenter
+          margin-right: 8
+          width: 22
+          height: 18
+          text: ?
+          tooltip: In Modules you can toggle modules, assign hotkeys, and open each script.
+        DtCardScroll
+          id: modulesScroll
+          anchors.top: modulesHint.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          margin-left: 8
+          margin-right: 8
+          margin-bottom: 26
+          layout:
+            type: verticalBox
+            fit-children: false
+            spacing: 10
+
+          Panel
+            id: rowModAntiParalyze
+            height: 28
+
+            BotSwitch
+              id: modAntiParalyzeSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modAntiParalyzeSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Anti Paralyze
+
+            DtHelpButton
+              id: modAntiParalyzeHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Anti Paralyze. Example: F1.
+
+            TextEdit
+              id: modAntiParalyzeKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modAntiParalyzeClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modAntiParalyzeSet
+              anchors.right: modAntiParalyzeClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modAntiParalyzeOpen
+              anchors.right: modAntiParalyzeSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+          Panel
+            id: rowModAutoHaste
+            height: 28
+
+            BotSwitch
+              id: modAutoHasteSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modAutoHasteSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Auto Haste
+
+            DtHelpButton
+              id: modAutoHasteHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Auto Haste. Example: F2.
+
+            TextEdit
+              id: modAutoHasteKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modAutoHasteClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modAutoHasteSet
+              anchors.right: modAutoHasteClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modAutoHasteOpen
+              anchors.right: modAutoHasteSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+          Panel
+            id: rowModAutoHeal
+            height: 28
+
+            BotSwitch
+              id: modAutoHealSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modAutoHealSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Auto Heal
+
+            DtHelpButton
+              id: modAutoHealHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Auto Heal. Example: F3.
+
+            TextEdit
+              id: modAutoHealKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modAutoHealClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modAutoHealSet
+              anchors.right: modAutoHealClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modAutoHealOpen
+              anchors.right: modAutoHealSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+          Panel
+            id: rowModRingSwap
+            height: 28
+
+            BotSwitch
+              id: modRingSwapSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modRingSwapSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Ring Swap (Immortal)
+              tooltip: Energy Ring ID = 3051 | Normal Ring ID = 3006.
+
+            DtHelpButton
+              id: modRingSwapHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Ring Swap (Immortal).
+
+            TextEdit
+              id: modRingSwapKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modRingSwapClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modRingSwapSet
+              anchors.right: modRingSwapClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modRingSwapOpen
+              anchors.right: modRingSwapSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+          Panel
+            id: rowModMagicWall
+            height: 28
+
+            BotSwitch
+              id: modMagicWallSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modMagicWallSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Wall Hold (MW/WG)
+
+            DtHelpButton
+              id: modMagicWallHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Wall Hold (cast follows MW/WG mode from Spells).
+
+            TextEdit
+              id: modMagicWallKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modMagicWallClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modMagicWallSet
+              anchors.right: modMagicWallClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modMagicWallOpen
+              anchors.right: modMagicWallSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+
+          Panel
+            id: rowModManaPot
+            height: 28
+
+            BotSwitch
+              id: modManaPotSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modManaPotSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Faster Mana Potting
+
+            DtHelpButton
+              id: modManaPotHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Faster Mana Potting.
+
+            TextEdit
+              id: modManaPotKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modManaPotClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modManaPotSet
+              anchors.right: modManaPotClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modManaPotOpen
+              anchors.right: modManaPotSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+          Panel
+            id: rowModCutWg
+            height: 28
+
+            BotSwitch
+              id: modCutWgSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modCutWgSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Auto Cut Wild Growth
+
+            DtHelpButton
+              id: modCutWgHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Auto Cut Wild Growth.
+
+            TextEdit
+              id: modCutWgKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modCutWgClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modCutWgSet
+              anchors.right: modCutWgClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modCutWgOpen
+              anchors.right: modCutWgSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+          Panel
+            id: rowModStamina
+            height: 28
+
+            BotSwitch
+              id: modStaminaSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modStaminaSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Stamina Item
+
+            DtHelpButton
+              id: modStaminaHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Stamina Item.
+
+            TextEdit
+              id: modStaminaKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modStaminaClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modStaminaSet
+              anchors.right: modStaminaClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modStaminaOpen
+              anchors.right: modStaminaSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+          Panel
+            id: rowModSpellwand
+            height: 28
+
+            BotSwitch
+              id: modSpellwandSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modSpellwandSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Spellwand
+
+            DtHelpButton
+              id: modSpellwandHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey to toggle Spellwand.
+
+            TextEdit
+              id: modSpellwandKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modSpellwandClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modSpellwandSet
+              anchors.right: modSpellwandClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modSpellwandOpen
+              anchors.right: modSpellwandSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+
+          Panel
+            id: rowModLeaderTarget
+            height: 28
+
+            BotSwitch
+              id: modLeaderTargetSwitch
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              text: On
+
+            Label
+              anchors.left: modLeaderTargetSwitch.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              width: 170
+              text: Leader Target Assist
+
+            DtHelpButton
+              id: modLeaderTargetHelp
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 256
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Missile-based assist: attacks what your leader attacks.
+
+            TextEdit
+              id: modLeaderTargetKey
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 286
+              margin-right: 169
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: modLeaderTargetClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: modLeaderTargetSet
+              anchors.right: modLeaderTargetClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+            Button
+              id: modLeaderTargetOpen
+              anchors.right: modLeaderTargetSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 52
+              height: 22
+              text: Open
+
+      Panel
+        id: pageHotkeys
+        anchors.fill: parent
+
+        Label
+          id: hkTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [Icon Hotkeys]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backHotkeys
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+
+        DtHelpButton
+          id: backHotkeysHelp
+          anchors.left: backHotkeys.right
+          anchors.verticalCenter: backHotkeys.verticalCenter
+          margin-left: 6
+          width: 22
+          height: 18
+          text: ?
+          tooltip: Return to main menu.
+        Label
+          id: hkHint
+          anchors.top: hkTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          margin-top: 8
+          text-align: center
+          text: Set replaces, Clear removes, Esc cancels capture (chat-safe).
+          color: #cccccc
+
+
+        DtHelpButton
+          id: hkHintHelp
+          anchors.right: parent.right
+          anchors.verticalCenter: hkHint.verticalCenter
+          margin-right: 8
+          width: 22
+          height: 18
+          text: ?
+          tooltip: Icon Hotkeys: rename actions and configure hotkeys/icons.
+        Button
+          id: manageIcons
+          anchors.top: hkHint.bottom
+          anchors.right: parent.right
+          width: 110
+          height: 18
+          margin-top: 6
+          text: Manage Icons
+
+        DtHelpButton
+          id: manageIconsHelp
+          anchors.right: manageIcons.left
+          anchors.verticalCenter: manageIcons.verticalCenter
+          margin-right: 6
+          width: 22
+          height: 22
+          text: ?
+
+        DtCard
+          id: hkScroll
+          anchors.top: manageIcons.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 10
+          margin-left: 8
+          margin-right: 8
+          margin-bottom: 26
+
+          Panel
+            id: rowCaveToggle
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 28
+
+            TextEdit
+              id: caveToggleLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: CaveBot (Toggle)
+              width: 180
+              color: #ffffff
+
+            DtHelpButton
+              id: caveToggleHelp
+              anchors.left: caveToggleLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Tools de CaveBot Toggle.
+
+            TextEdit
+              id: caveToggleKey
+              anchors.left: caveToggleHelp.right
+              anchors.right: caveToggleSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: caveToggleClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: caveToggleSet
+              anchors.right: caveToggleClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowTargetToggle
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: targetToggleLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: TargetBot (Toggle)
+              width: 180
+              color: #ffffff
+
+            DtHelpButton
+              id: targetToggleHelp
+              anchors.left: targetToggleLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Tools de TargetBot Toggle.
+
+            TextEdit
+              id: targetToggleKey
+              anchors.left: targetToggleHelp.right
+              anchors.right: targetToggleSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: targetToggleClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: targetToggleSet
+              anchors.right: targetToggleClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowUeNonSafe
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: ueNonSafeLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: UE (NON-SAFE)
+              width: 180
+              color: #ffaa00
+
+            DtHelpButton
+              id: ueNonSafeHelp
+              anchors.left: ueNonSafeLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Tools de UE NON-SAFE.
+
+            TextEdit
+              id: ueNonSafeKey
+              anchors.left: ueNonSafeHelp.right
+              anchors.right: ueNonSafeSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: ueNonSafeClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: ueNonSafeSet
+              anchors.right: ueNonSafeClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowUeSafe
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: ueSafeLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: UE (SAFE)
+              width: 180
+              color: #00c000
+
+            DtHelpButton
+              id: ueSafeHelp
+              anchors.left: ueSafeLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Tools de UE SAFE.
+
+            TextEdit
+              id: ueSafeKey
+              anchors.left: ueSafeHelp.right
+              anchors.right: ueSafeSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: ueSafeClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: ueSafeSet
+              anchors.right: ueSafeClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowSuperSd
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: superSdLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Super SD
+              width: 180
+              color: #ffffff
+
+            DtHelpButton
+              id: superSdHelp
+              anchors.left: superSdLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Tools de Super SD.
+
+            TextEdit
+              id: superSdKey
+              anchors.left: superSdHelp.right
+              anchors.right: superSdSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: superSdClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: superSdSet
+              anchors.right: superSdClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowSuperSdFire
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: superSdFireLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Super SD Fire
+              width: 180
+              color: #ff4513
+
+            DtHelpButton
+              id: superSdFireHelp
+              anchors.left: superSdFireLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Tools de Super SD Fire.
+
+            TextEdit
+              id: superSdFireKey
+              anchors.left: superSdFireHelp.right
+              anchors.right: superSdFireSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: superSdFireClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: superSdFireSet
+              anchors.right: superSdFireClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowSuperSdHoly
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: superSdHolyLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Super Holy SD
+              width: 180
+              color: #88e3dd
+
+            DtHelpButton
+              id: superSdHolyHelp
+              anchors.left: superSdHolyLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Tools de Super Holy SD.
+
+            TextEdit
+              id: superSdHolyKey
+              anchors.left: superSdHolyHelp.right
+              anchors.right: superSdHolySet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: superSdHolyClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: superSdHolySet
+              anchors.right: superSdHolyClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowSioVip
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: sioVipLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Sio VIP
+              width: 180
+              color: #3895D3
+
+            DtHelpButton
+              id: sioVipHelp
+              anchors.left: sioVipLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Tools de Sio VIP.
+
+            TextEdit
+              id: sioVipKey
+              anchors.left: sioVipHelp.right
+              anchors.right: sioVipSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: sioVipClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: sioVipSet
+              anchors.right: sioVipClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+          Panel
+            id: rowFollowToggle
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: followToggleLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Follow (Toggle)
+              width: 180
+              color: #ffffff
+
+            DtHelpButton
+              id: followToggleHelp
+              anchors.left: followToggleLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Tools de Follow Toggle.
+
+            TextEdit
+              id: followToggleKey
+              anchors.left: followToggleHelp.right
+              anchors.right: followToggleSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: followToggleClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: followToggleSet
+              anchors.right: followToggleClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+
+          Panel
+            id: rowLeaderTarget
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 28
+
+            TextEdit
+              id: leaderTargetLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Leader Target
+              width: 180
+              color: #ffffff
+
+            DtHelpButton
+              id: leaderTargetHelp
+              anchors.left: leaderTargetLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Hotkey for Leader Target Assist toggle.
+
+            TextEdit
+              id: leaderTargetKey
+              anchors.left: leaderTargetHelp.right
+              anchors.right: leaderTargetSet.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 22
+              font: terminus-10px
+
+            Button
+              id: leaderTargetClear
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 55
+              height: 22
+              text: Clear
+
+            Button
+              id: leaderTargetSet
+              anchors.right: leaderTargetClear.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 46
+              height: 22
+              text: Set
+
+      Panel
+        id: pageScripts
+        anchors.fill: parent
+
+        Label
+          id: scriptsTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [Scripts]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backScripts
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+
+        DtHelpButton
+          id: backScriptsHelp
+          anchors.left: backScripts.right
+          anchors.verticalCenter: backScripts.verticalCenter
+          margin-left: 6
+          width: 22
+          height: 18
+          text: ?
+          tooltip: Return to main menu.
+        DtCard
+          id: scriptsScroll
+          anchors.top: scriptsTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          margin-left: 8
+          margin-right: 8
+          Panel
+            id: rowScriptFile
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 22
+
+            Label
+              id: scriptFileLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: File
+              width: 60
+
+
+            DtHelpButton
+              id: scriptFileHelp
+              anchors.left: scriptFileLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 20
+              text: ?
+              tooltip: Lua file path to load in this viewer.
+            TextEdit
+              id: scriptFile
+              anchors.left: prev.right
+              anchors.right: scriptLoad.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 20
+              font: terminus-10px
+              text: scripts/druid_toolkit.lua
+              tooltip: Ruta relativa dentro del profile (ej: scripts/druid_toolkit.lua).
+
+            Button
+              id: scriptLoad
+              anchors.right: scriptSave.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 70
+              height: 20
+              text: Load
+
+            DtHelpButton
+              id: scriptSaveHelp
+              anchors.right: scriptLoad.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 6
+              width: 22
+              height: 20
+              text: ?
+              tooltip: You can edit here and save. You can also edit the .lua directly in Files.
+
+            Button
+              id: scriptSave
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 70
+              height: 20
+              text: Save
+
+          Panel
+            id: rowScriptSearch
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+            height: 22
+
+            Label
+              id: scriptSearchLabel
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Search
+              width: 60
+
+
+            DtHelpButton
+              id: scriptSearchHelp
+              anchors.left: scriptSearchLabel.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 6
+              width: 22
+              height: 20
+              text: ?
+              tooltip: Search text inside the loaded script.
+            TextEdit
+              id: scriptSearch
+              anchors.left: prev.right
+              anchors.right: scriptFind.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-left: 8
+              margin-right: 8
+              height: 20
+              font: terminus-10px
+              tooltip: Search text inside the file (case-insensitive).
+
+            Button
+              id: scriptFind
+              anchors.right: scriptNext.left
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 4
+              width: 60
+              height: 20
+              text: Find
+
+            Button
+              id: scriptNext
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 60
+              height: 20
+              text: Next
+
+          Label
+            id: scriptStatus
+            anchors.top: prev.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 8
+            height: 16
+            text: ""
+            color: #cccccc
+
+
+          DtHelpButton
+            id: scriptStatusHelp
+            anchors.left: parent.left
+            anchors.top: scriptStatus.bottom
+            margin-top: 4
+            width: 22
+            height: 16
+            text: ?
+            tooltip: Load and search status inside the script.
+          Panel
+            id: scriptContentBox
+            anchors.top: prev.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            margin-top: 10
+
+            DtHelpButton
+              id: scriptViewerHelp
+              anchors.top: parent.top
+              anchors.left: parent.left
+              margin-top: 4
+              margin-left: 4
+              width: 22
+              height: 20
+              text: ?
+              tooltip: In-game editor. You can also edit the .lua directly in Files.
+
+            TextEdit
+              id: scriptContent
+              anchors.top: scriptViewerHelp.bottom
+              anchors.left: parent.left
+              anchors.bottom: parent.bottom
+              anchors.right: scriptScrollbar.left
+              margin-top: 6
+              margin-right: 8
+              text-wrap: false
+              multiline: true
+              font: terminus-10px
+              tooltip: In-game editor for the loaded script. Use Save to store changes.
+
+            VerticalScrollBar
+              id: scriptScrollbar
+              anchors.top: parent.top
+              anchors.bottom: parent.bottom
+              anchors.right: parent.right
+              width: 14
+              pixels-scroll: true
+              step: 200
+
+      Panel
+        id: pageAbout
+        anchors.fill: parent
+
+        Label
+          id: aboutTitle
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 20
+          text-align: center
+          text: [About]
+          font: verdana-11px-rounded
+          color: #ffffff
+
+        Button
+          id: backAbout
+          anchors.top: parent.top
+          anchors.left: parent.left
+          width: 60
+          height: 18
+          text: Back
+
+
+        DtHelpButton
+          id: backAboutHelp
+          anchors.left: backAbout.right
+          anchors.verticalCenter: backAbout.verticalCenter
+          margin-left: 6
+          width: 22
+          height: 18
+          text: ?
+          tooltip: Return to main menu.
+        DtCardScroll
+          id: aboutScroll
+          anchors.top: aboutTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 12
+          margin-left: 8
+          margin-right: 8
+          margin-bottom: 26
+          layout:
+            type: verticalBox
+            fit-children: false
+            spacing: 10
+
+          Label
+            id: aboutText
+            text: "Druid Toolkit: loader-based bot scripts for OTCv8.\n\nTip: use VSCode or Notepad++ for cleaner editing.\nVSCode Copilot/AI helps a lot if you are not a coder yet."
+            text-wrap: true
+            multiline: true
+            color: #dddddd
+
+          Button
+            id: aboutRepo
+            height: 26
+            text: "GitHub Repo (Open Source)"
+
+
+          DtHelpButton
+            id: aboutRepoHelp
+            height: 20
+            width: 22
+            text: ?
+            tooltip: Open the open-source repository on GitHub.
+          Label
+            id: aboutRepoUrl
+            text: "github.com/eduardogallifaochoa/otcv8-eddiexo-scripts"
+            color: #cccccc
+
+          Button
+            id: aboutDonate
+            height: 26
+            text: "Optional donation (if my scripts helped you)"
+
+          DtHelpButton
+            id: aboutDonateHelp
+            height: 20
+            width: 22
+            text: ?
+            tooltip: Optional support link (PayPal donation).
+
+          Label
+            id: aboutDonateUrl
+            text: "paypal.me/eddielol"
+            color: #cccccc
+    HorizontalSeparator
+      id: sepBottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: footer.top
+      margin-bottom: 22
+
+    Panel
+      id: footer
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      height: 26
+      padding-left: 8
+      padding-right: 8
+      image-source: /images/ui/panel_flat
+      image-border: 6
+      background-color: #00000033
+      border-width: 1
+      border-color: #ffffff18
+
+      Label
+        id: signature
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        text-align: left
+        text: "Eduardo Gallifa Scripts  |  eddiexo discord for more"
+        font: verdana-11px-rounded
+        color: #ff2b2b
+        opacity: 0.75
+
+      Button
+        id: closeButton
+        !text: tr('Close')
+        font: cipsoftFont
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        size: 55 21
+
+
+
+
+
+
+
+
+
+
+
+
+      DtHelpButton
+        id: closeHelp
+        anchors.right: closeButton.left
+        anchors.verticalCenter: closeButton.verticalCenter
+        margin-right: 6
+        width: 22
+        height: 20
+        text: ?
+        tooltip: Close setup window (does not disable modules).
+
+
+
+]==]
+
+local __druid_toolkit_source = [==[
 --==============================================================
 -- DRUID TOOLKIT (OTClient / OTCv8 macros)
 -- Loaded via: bot_loaders/druid_toolkit_loader.lua
@@ -3207,3 +5915,19 @@ for k, a in pairs(DT_ACTIONS) do
 end
 log("Loaded.")
 
+
+]==]
+
+local __ok, __err = pcall(function()
+  local __chunk, __loadErr = load(__druid_toolkit_source, 'scripts/druid_toolkit.lua')
+  if not __chunk then error(__loadErr) end
+  __chunk()
+end)
+
+if not __ok then
+  print('[DruidToolkitSingle] FAILED: ' .. tostring(__err))
+else
+  print('[DruidToolkitSingle] Loaded.')
+end
+
+__druid_toolkit_source = nil

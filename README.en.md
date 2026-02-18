@@ -44,3 +44,20 @@ Realistically I’ll work on this until **Feb 27, 2026** (Resident Evil Requiem 
 
 No paid/locked scripts should be committed.
 If you have private stuff, put it in `private/` (ignored by git).
+
+## Portable single-file Toolkit
+
+- Generated file: `druid_toolkit_single.lua`
+- Rebuild command:
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/build_druid_toolkit_single.ps1
+```
+- Ingame Script Editor:
+```lua
+dofile('druid_toolkit_single.lua')
+```
+
+## Latest status
+
+- 2026-02-18: functional stable version.
+- This is the **last push for now**.

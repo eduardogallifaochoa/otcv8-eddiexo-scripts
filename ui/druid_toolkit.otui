@@ -97,7 +97,7 @@ DruidToolkitSetupWindow < MainWindow
       border-color: #ffffff22
       layout:
         type: horizontalBox
-        fit-children: true
+        fit-children: false
         spacing: 0
 
       DtNavButton
@@ -871,7 +871,7 @@ DruidToolkitSetupWindow < MainWindow
               width: 22
               height: 22
               text: ?
-              tooltip: Enable/disable MW ScrollDown and assign a hotkey.
+              tooltip: ON enables WheelDown/hotkey casting. Mode buttons below can still cast once manually.
 
             TextEdit
               id: mwScrollSpellKey
@@ -881,7 +881,7 @@ DruidToolkitSetupWindow < MainWindow
               width: 150
               height: 22
               font: terminus-10px
-              tooltip: Optional hotkey to toggle MW ScrollDown.
+              tooltip: Hotkey to toggle MW ScrollDown ON/OFF (example: F12).
 
             Button
               id: mwScrollSpellClear
@@ -918,7 +918,7 @@ DruidToolkitSetupWindow < MainWindow
             Label
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
-              text: MW Block Check
+              text: MW/WG Cast Mode
               width: 170
 
             DtHelpButton
@@ -929,7 +929,7 @@ DruidToolkitSetupWindow < MainWindow
               width: 22
               height: 22
               text: ?
-              tooltip: Choose block check for scroll cast: Magic Wall (2128), Wild Growth (2130), or your Custom ID.
+              tooltip: Select what to cast/check. Magic Wall and Wild Growth also cast once when clicked.
 
             Button
               id: mwScrollModeMW
@@ -939,7 +939,7 @@ DruidToolkitSetupWindow < MainWindow
               width: 100
               height: 22
               text: Magic Wall
-              tooltip: Blocked tile ID = 2128.
+              tooltip: Use Magic Wall (rune 3180, block check 2128). Click to cast once.
 
             Button
               id: mwScrollModeWG
@@ -949,7 +949,7 @@ DruidToolkitSetupWindow < MainWindow
               width: 100
               height: 22
               text: Wild Growth
-              tooltip: Blocked tile ID = 2130.
+              tooltip: Use Wild Growth (rune 3156, block check 2130). Click to cast once.
 
             Button
               id: mwScrollModeCustom
@@ -959,7 +959,7 @@ DruidToolkitSetupWindow < MainWindow
               width: 78
               height: 22
               text: Custom ID
-              tooltip: Use Custom ID from the field at the right.
+              tooltip: Use the Custom rune ID from the field at the right. Click to cast once.
 
             TextEdit
               id: mwScrollCustomId
@@ -969,7 +969,36 @@ DruidToolkitSetupWindow < MainWindow
               height: 22
               font: terminus-10px
               text: 2128
-              tooltip: Custom top item ID used when mode is Custom.
+              tooltip: Custom rune item ID used in Custom mode (example: 3156).
+
+          Panel
+            id: rowMwHoldMark
+            height: 28
+
+            Label
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: Hold Mark Key
+              width: 170
+
+            DtHelpButton
+              id: mwHoldMarkHelp
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              margin-right: 209
+              width: 22
+              height: 22
+              text: ?
+              tooltip: Key used to mark tiles for Hold (short press mark/unmark, hold 2.5s clear all). Example: .
+
+            TextEdit
+              id: mwHoldMarkKey
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              width: 180
+              height: 22
+              font: terminus-10px
+              tooltip: Hold mark key (example: . or F9).
 
       Panel
         id: pageModules
@@ -1313,7 +1342,7 @@ DruidToolkitSetupWindow < MainWindow
               anchors.verticalCenter: parent.verticalCenter
               margin-left: 8
               width: 170
-              text: Magic Wall (Hold)
+              text: Wall Hold (MW/WG)
 
             DtHelpButton
               id: modMagicWallHelp
@@ -1323,7 +1352,7 @@ DruidToolkitSetupWindow < MainWindow
               width: 22
               height: 22
               text: ?
-              tooltip: Hotkey to toggle Magic Wall Hold.
+              tooltip: Hotkey to toggle Wall Hold (cast follows MW/WG mode from Spells).
 
             TextEdit
               id: modMagicWallKey
@@ -2661,8 +2690,5 @@ DruidToolkitSetupWindow < MainWindow
         height: 20
         text: ?
         tooltip: Close setup window (does not disable modules).
-
-
-
 
 
