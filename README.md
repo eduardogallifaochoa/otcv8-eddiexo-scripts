@@ -50,6 +50,44 @@ powershell -ExecutionPolicy Bypass -File tools/build_druid_toolkit_single.ps1
 ```lua
 dofile('druid_toolkit_single.lua')
 ```
+
+## Instalacion ultra rapida en otro bot/perfil
+
+Ejemplo de perfil destino:
+`C:\Users\USER\AppData\Roaming\OTClientV8\Baiak Eternium\bot\DRUID`
+
+### Opcion A (autoload recomendado)
+1. Copia `druid_toolkit_single.lua` dentro de la carpeta del perfil (mismo nivel que `_Loader.lua`).
+2. Asegurate de tener este bloque en `_Loader.lua` (ya viene en este repo):
+```lua
+pcall(dofile, 'druid_toolkit_single.lua')
+```
+3. Abre OTCv8 con ese perfil y listo: se carga solo.
+
+### Opcion B (manual desde Ingame Script Editor)
+```lua
+dofile('druid_toolkit_single.lua')
+```
+
+## GitHub Artifact (loader/single-file)
+
+Se agrego workflow:
+- `.github/workflows/build-artifacts.yml`
+
+Como usarlo:
+1. Ve a **Actions** en GitHub.
+2. Ejecuta **Build Toolkit Artifacts** (o usa el run generado por push).
+3. Descarga el artifact `druid-toolkit-files`.
+4. Ese zip trae:
+- `druid_toolkit_loader.lua`
+- `druid_toolkit_single.lua`
+
+## ¿Borrar todo el repo y dejar solo loader?
+
+No recomendado.
+
+Mejor deja el repo completo (fuentes + UI + builder) y distribuye solo los artifacts/single-file.
+Asi mantienes mantenimiento facil y una version portable para copiar a otros bots.
 ## Goals (si sigo con esto)
 
 Realisticamente le voy a meter hasta el **27-Feb-2026** (sale Resident Evil Requiem), pero los goals:
@@ -66,6 +104,15 @@ No se suben scripts comprados/bitlocked.
 Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
 
 ## Bitacora / Changelog
+### 2026-02-19
+
+- README actualizado con tutorial rapido para instalar Druid Toolkit en otros perfiles/bots.
+- Se agrego workflow GitHub Actions para generar artifact descargable (`druid-toolkit-files`).
+- Se agrego carpeta `artifacts/` con:
+  - `artifacts/druid_toolkit_loader.lua`
+  - `artifacts/druid_toolkit_single.lua`
+- Recomendacion documentada: no borrar todo el repo; usar single-file/artifacts para distribucion.
+
 ### 2026-02-18
 
 - Se removio `INSPIRACION_NOTES.md` (solo era nota temporal de analisis).
@@ -141,6 +188,7 @@ Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
   - Tabs + menu + footer signature
   - Scripts viewer con search + scrollbar
   - Modules tab (toggles + hotkeys para modulos)
+
 
 
 
