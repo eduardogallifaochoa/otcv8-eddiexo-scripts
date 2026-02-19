@@ -5,6 +5,7 @@ on:
   push:
     branches: ["main"]
     paths:
+      - "_Loader.lua"
       - "bot_loaders/druid_toolkit_loader.lua"
       - "druid_toolkit_single.lua"
       - "artifacts/**"
@@ -20,8 +21,18 @@ jobs:
       - name: Prepare dist
         run: |
           mkdir -p dist
-          cp bot_loaders/druid_toolkit_loader.lua dist/
+          cp _Loader.lua dist/
           cp druid_toolkit_single.lua dist/
+          cat > dist/QUICKSTART.txt << 'EOF'
+          DRUID TOOLKIT QUICKSTART
+
+          1) Copy _Loader.lua + druid_toolkit_single.lua into your bot profile folder.
+          2) Start OTCv8 with that profile.
+          3) Druid Toolkit autoloads.
+
+          Optional manual load:
+            dofile('druid_toolkit_single.lua')
+          EOF
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

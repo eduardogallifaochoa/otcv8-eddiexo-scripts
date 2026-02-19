@@ -1,0 +1,8 @@
+DRUID TOOLKIT QUICKSTART
+
+1) Copy _Loader.lua + druid_toolkit_single.lua into your bot profile folder.
+2) Start OTCv8 with that profile.
+3) Druid Toolkit autoloads.
+
+Optional manual load:
+  dofile('druid_toolkit_single.lua')
