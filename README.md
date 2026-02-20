@@ -56,22 +56,16 @@ dofile('druid_toolkit_single.lua')
 Ejemplo de perfil destino:
 `C:\Users\USER\AppData\Roaming\OTClientV8\Baiak Eternium\bot\DRUID`
 
-### Opcion A (sin tocar codigo, recomendado)
-1. Ve a **GitHub > Actions > Build Toolkit Artifacts**.
-2. Descarga el artifact `druid-toolkit-files`.
-3. Extrae y copia estos archivos al perfil destino (misma carpeta del bot):
-- `_Loader.lua`
-- `druid_toolkit_single.lua`
-4. Abre OTCv8 con ese perfil. Se autoload solo.
-
-### Opcion B (si no quieres reemplazar `_Loader.lua`)
-- Copia solo `druid_toolkit_single.lua`.
-- Cargalo manual una vez desde Ingame Script Editor:
+### Flujo recomendado (solo 1 archivo)
+1. Descarga `druid_toolkit_single.lua` (artifact o repo).
+2. Copialo a la carpeta del perfil destino.
+3. Si ese perfil ya lo autoload, abre OTCv8 y listo.
+4. Si no autoload, cargalo una vez en Ingame Script Editor:
 ```lua
 dofile('druid_toolkit_single.lua')
 ```
 
-## GitHub Artifact (loader/single-file)
+## GitHub Artifact (single-file)
 
 Se agrego workflow:
 - `.github/workflows/build-artifacts.yml`
@@ -81,8 +75,7 @@ Como usarlo:
 2. Ejecuta **Build Toolkit Artifacts** (o usa el run generado por push).
 3. Descarga el artifact `druid-toolkit-files`.
 4. Ese zip trae:
-- `_Loader.lua` (autoload listo)
-- `druid_toolkit_single.lua` 
+- `druid_toolkit_single.lua`
 - `QUICKSTART.txt`
 
 ## ¿Borrar todo el repo y dejar solo loader?
@@ -112,8 +105,8 @@ Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
 - README actualizado con tutorial rapido para instalar Druid Toolkit en otros perfiles/bots.
 - Se agrego workflow GitHub Actions para generar artifact descargable (`druid-toolkit-files`).
 - Se agrego carpeta `artifacts/` con:
-  - `artifacts/_Loader.lua`
   - `artifacts/druid_toolkit_single.lua`
+  - `artifacts/QUICKSTART.txt`
 - Recomendacion documentada: no borrar todo el repo; usar single-file/artifacts para distribucion.
 
 ### 2026-02-18
@@ -191,6 +184,9 @@ Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
   - Tabs + menu + footer signature
   - Scripts viewer con search + scrollbar
   - Modules tab (toggles + hotkeys para modulos)
+
+
+
 
 
 

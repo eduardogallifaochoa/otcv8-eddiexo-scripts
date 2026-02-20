@@ -5,11 +5,11 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "_Loader.lua"
-      - "bot_loaders/druid_toolkit_loader.lua"
       - "druid_toolkit_single.lua"
       - "artifacts/**"
       - ".github/workflows/build-artifacts.yml"
+      - "README.md"
+      - "README.en.md"
 
 jobs:
   build-artifacts:
@@ -21,17 +21,18 @@ jobs:
       - name: Prepare dist
         run: |
           mkdir -p dist
-          cp _Loader.lua dist/
           cp druid_toolkit_single.lua dist/
           cat > dist/QUICKSTART.txt << 'EOF'
           DRUID TOOLKIT QUICKSTART
 
-          1) Copy _Loader.lua + druid_toolkit_single.lua into your bot profile folder.
-          2) Start OTCv8 with that profile.
-          3) Druid Toolkit autoloads.
+          Required file:
+            - druid_toolkit_single.lua
 
-          Optional manual load:
-            dofile('druid_toolkit_single.lua')
+          Install (recommended):
+          1) Copy druid_toolkit_single.lua into your bot profile folder.
+          2) If your profile autoloads it, just start OTCv8.
+          3) If not, load once in Ingame Script Editor:
+             dofile('druid_toolkit_single.lua')
           EOF
 
       - name: Upload artifact
