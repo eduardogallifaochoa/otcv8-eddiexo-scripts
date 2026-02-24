@@ -207,3 +207,20 @@ Si quieres descargar directo sin entrar a Actions:
 3. Copia el archivo al perfil del bot y listo.
 
 Este repo ya incluye workflow para publicar esos archivos en Releases al crear tag `v*` o por `workflow_dispatch`.
+
+## Capturas
+
+<div align="center">
+  <img src="screenshots/Screenshot_1.jpg" alt="Toolkit - Menu" width="47%" />
+  <img src="screenshots/Screenshot_2.jpg" alt="Toolkit - General" width="47%" />
+  <br/>
+  <img src="screenshots/Screenshot_3.jpg" alt="Toolkit - Spells" width="47%" />
+  <img src="screenshots/Screenshot_4.jpg" alt="Toolkit - Modules" width="47%" />
+  <br/>
+  <img src="screenshots/Screenshot_5.jpg" alt="Toolkit - Icon Hotkeys" width="47%" />
+  <img src="screenshots/Screenshot_6.jpg" alt="Toolkit - Scripts Viewer" width="47%" />
+  <br/>
+  <img src="screenshots/Screenshot_7.jpg" alt="Toolkit - About" width="47%" />
+  <img src="screenshots/Screenshot_8.jpg" alt="Toolkit - Ingame Icons" width="47%" />
+</div>
+

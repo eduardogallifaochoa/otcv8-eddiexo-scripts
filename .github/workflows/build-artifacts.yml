@@ -6,7 +6,6 @@ on:
     branches: ["main"]
     paths:
       - "druid_toolkit_single.lua"
-      - "artifacts/**"
       - ".github/workflows/build-artifacts.yml"
       - "README.md"
       - "README.en.md"
@@ -40,3 +39,4 @@ jobs:
         with:
           name: druid-toolkit-files
           path: dist/
+

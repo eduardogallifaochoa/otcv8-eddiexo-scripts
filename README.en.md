@@ -122,3 +122,20 @@ If you want direct download without browsing Actions:
 3. Copy it to your bot profile folder and run.
 
 This repo now includes a workflow that publishes these files to Releases when creating a `v*` tag or running `workflow_dispatch`.
+
+## Screenshots
+
+<div align="center">
+  <img src="screenshots/Screenshot_1.jpg" alt="Toolkit - Menu" width="47%" />
+  <img src="screenshots/Screenshot_2.jpg" alt="Toolkit - General" width="47%" />
+  <br/>
+  <img src="screenshots/Screenshot_3.jpg" alt="Toolkit - Spells" width="47%" />
+  <img src="screenshots/Screenshot_4.jpg" alt="Toolkit - Modules" width="47%" />
+  <br/>
+  <img src="screenshots/Screenshot_5.jpg" alt="Toolkit - Icon Hotkeys" width="47%" />
+  <img src="screenshots/Screenshot_6.jpg" alt="Toolkit - Scripts Viewer" width="47%" />
+  <br/>
+  <img src="screenshots/Screenshot_7.jpg" alt="Toolkit - About" width="47%" />
+  <img src="screenshots/Screenshot_8.jpg" alt="Toolkit - Ingame Icons" width="47%" />
+</div>
+

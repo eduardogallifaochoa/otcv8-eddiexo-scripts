@@ -42,8 +42,19 @@ jobs:
         run: |
           mkdir -p dist
           cp druid_toolkit_single.lua dist/
-          cp artifacts/QUICKSTART.txt dist/ 2>/dev/null || true
-          (cd dist && zip -9 -r druid_toolkit_single.zip druid_toolkit_single.lua QUICKSTART.txt >/dev/null || zip -9 -r druid_toolkit_single.zip druid_toolkit_single.lua >/dev/null)
+          cat > dist/QUICKSTART.txt << 'EOF'
+          DRUID TOOLKIT QUICKSTART
+
+          Required file:
+            - druid_toolkit_single.lua
+
+          Install (recommended):
+          1) Copy druid_toolkit_single.lua into your bot profile folder.
+          2) If your profile autoloads it, just start OTCv8.
+          3) If not, load once in Ingame Script Editor:
+             dofile('druid_toolkit_single.lua')
+          EOF
+          (cd dist && zip -9 -r druid_toolkit_single.zip druid_toolkit_single.lua QUICKSTART.txt >/dev/null)
           sha256sum dist/druid_toolkit_single.lua > dist/druid_toolkit_single.lua.sha256
 
       - name: Create/Update release
