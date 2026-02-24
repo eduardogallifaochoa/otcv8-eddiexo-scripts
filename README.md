@@ -197,3 +197,13 @@ Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
 
 
 
+
+## Releases (descarga facil)
+
+Si quieres descargar directo sin entrar a Actions:
+
+1. Ve a **Releases** del repo.
+2. Descarga `druid_toolkit_single.lua` (o `druid_toolkit_single.zip`).
+3. Copia el archivo al perfil del bot y listo.
+
+Este repo ya incluye workflow para publicar esos archivos en Releases al crear tag `v*` o por `workflow_dispatch`.

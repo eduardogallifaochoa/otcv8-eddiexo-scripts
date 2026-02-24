@@ -112,3 +112,13 @@ That gives you clean maintenance plus easy portable installs.
 
 
 
+
+## Releases (easy download)
+
+If you want direct download without browsing Actions:
+
+1. Open the repo **Releases** page.
+2. Download `druid_toolkit_single.lua` (or `druid_toolkit_single.zip`).
+3. Copy it to your bot profile folder and run.
+
+This repo now includes a workflow that publishes these files to Releases when creating a `v*` tag or running `workflow_dispatch`.

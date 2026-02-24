@@ -1,0 +1,68 @@
+name: Release Druid Toolkit Single File
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (example: v1.0.0)"
+        required: true
+        default: "v1.0.0"
+      title:
+        description: "Release title"
+        required: true
+        default: "Druid Toolkit Single File"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve release metadata
+        id: meta
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+            echo "title=${{ github.event.inputs.title }} (${{ github.event.inputs.tag }})" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "title=Druid Toolkit Single File (${GITHUB_REF_NAME})" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare release files
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp druid_toolkit_single.lua dist/
+          cp artifacts/QUICKSTART.txt dist/ 2>/dev/null || true
+          (cd dist && zip -9 -r druid_toolkit_single.zip druid_toolkit_single.lua QUICKSTART.txt >/dev/null || zip -9 -r druid_toolkit_single.zip druid_toolkit_single.lua >/dev/null)
+          sha256sum dist/druid_toolkit_single.lua > dist/druid_toolkit_single.lua.sha256
+
+      - name: Create/Update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.title }}
+          generate_release_notes: true
+          make_latest: true
+          files: |
+            dist/druid_toolkit_single.lua
+            dist/druid_toolkit_single.zip
+            dist/druid_toolkit_single.lua.sha256
+            dist/QUICKSTART.txt
+          body: |
+            Ready-to-use single-file toolkit.
+
+            Files:
+            - druid_toolkit_single.lua
+            - druid_toolkit_single.zip
+            - druid_toolkit_single.lua.sha256
+            - QUICKSTART.txt
