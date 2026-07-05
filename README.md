@@ -100,6 +100,18 @@ No se suben scripts comprados/bitlocked.
 Si tienes cosas privadas, ponlas en `private/` (esta en `.gitignore`).
 
 ## Bitacora / Changelog
+### 2026-07-05
+
+- Nueva carpeta `otclient-redemption-mods/caster_toolkit/`: toolkit standalone para Druid/Sorcerer
+  compatible con **tibia-eddie-retroclientgod** (basado en OTClient Redemption, protocolo 772 -
+  NO tiene el framework de bot de OTCv8, asi que no depende de CaveBot/TargetBot/vBot/macro()).
+- Es un **mod nativo** (`.otmod` + `.lua` + `.otui`), no un script para el Ingame Script Editor:
+  se instala copiando la carpeta a `mods/` del client.
+- Funciones: Auto Heal + Emergency Heal (por umbral de HP%, cooldown-safe), Auto Haste (loop por
+  intervalo), Cure manual, hotkeys configurables (Set/Clear con captura de tecla), ventana de
+  settings persistida en `g_settings`, icono toggle en el top menu (`bot.png`).
+- Ver `otclient-redemption-mods/caster_toolkit/README.md` para instalacion.
+
 ### 2026-02-19
 
 - README actualizado con tutorial rapido para instalar Druid Toolkit en otros perfiles/bots.

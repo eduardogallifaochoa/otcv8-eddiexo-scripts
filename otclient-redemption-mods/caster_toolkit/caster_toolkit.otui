@@ -1,0 +1,304 @@
+SectionLabel < Label
+  font: verdana-11px-monochrome
+  color: #ffcc55
+  text-wrap: false
+  anchors.left: parent.left
+  anchors.right: parent.right
+  anchors.top: prev.bottom
+  margin-top: 8
+
+FieldLabel < Label
+  width: 150
+  anchors.left: parent.left
+  anchors.verticalCenter: parent.verticalCenter
+
+FieldRow < UIWidget
+  height: 22
+  anchors.left: parent.left
+  anchors.right: parent.right
+  anchors.top: prev.bottom
+  margin-top: 4
+
+HotkeyName < Label
+  width: 140
+  anchors.left: parent.left
+  anchors.verticalCenter: parent.verticalCenter
+
+HotkeyCurrent < Label
+  width: 90
+  text-align: center
+  color: #a0d0ff
+  anchors.left: prev.right
+  anchors.verticalCenter: parent.verticalCenter
+
+HotkeySetButton < Button
+  !text: tr('Set')
+  width: 45
+  anchors.left: prev.right
+  anchors.verticalCenter: parent.verticalCenter
+  margin-left: 4
+
+HotkeyClearButton < Button
+  !text: tr('Clear')
+  width: 50
+  anchors.left: prev.right
+  anchors.verticalCenter: parent.verticalCenter
+  margin-left: 4
+
+MainWindow
+  id: casterToolkitWindow
+  !text: tr('Caster Toolkit (Druid / Sorcerer)')
+  size: 460 540
+  @onEscape: toggle()
+
+  ComboBox
+    id: vocationCombo
+    anchors.top: parent.top
+    anchors.left: parent.left
+    width: 150
+
+  Label
+    !text: tr('Vocacion (define los defaults de hechizo)')
+    anchors.left: prev.right
+    anchors.verticalCenter: prev.verticalCenter
+    margin-left: 8
+    color: #aaaaaa
+
+  ScrollablePanel
+    id: contentPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    anchors.bottom: parent.bottom
+    margin-top: 8
+    margin-bottom: 40
+    padding-right: 4
+    vertical-scrollbar: contentScrollBar
+
+    SectionLabel
+      !text: tr('Auto Heal')
+      anchors.top: parent.top
+      margin-top: 0
+
+    FieldRow
+      CheckBox
+        id: autoHealEnabled
+        !text: tr('Activar Auto Heal')
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+
+    FieldRow
+      FieldLabel
+        !text: tr('Umbral HP %%')
+      SpinBox
+        id: autoHealThreshold
+        width: 60
+        minimum: 1
+        maximum: 100
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+
+    FieldRow
+      FieldLabel
+        !text: tr('Hechizo')
+      TextEdit
+        id: autoHealSpell
+        width: 180
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+
+    FieldRow
+      FieldLabel
+        !text: tr('Cooldown (ms)')
+      SpinBox
+        id: autoHealCooldown
+        width: 70
+        minimum: 250
+        maximum: 10000
+        step: 250
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+
+    SectionLabel
+      !text: tr('Emergency Heal (prioridad sobre Auto Heal)')
+
+    FieldRow
+      CheckBox
+        id: emergencyEnabled
+        !text: tr('Activar Emergency Heal')
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+
+    FieldRow
+      FieldLabel
+        !text: tr('Umbral HP %%')
+      SpinBox
+        id: emergencyThreshold
+        width: 60
+        minimum: 1
+        maximum: 100
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+
+    FieldRow
+      FieldLabel
+        !text: tr('Hechizo')
+      TextEdit
+        id: emergencySpell
+        width: 180
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+
+    FieldRow
+      FieldLabel
+        !text: tr('Cooldown (ms)')
+      SpinBox
+        id: emergencyCooldown
+        width: 70
+        minimum: 250
+        maximum: 10000
+        step: 250
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+
+    SectionLabel
+      !text: tr('Auto Haste')
+
+    FieldRow
+      CheckBox
+        id: hasteEnabled
+        !text: tr('Activar Auto Haste')
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+
+    FieldRow
+      FieldLabel
+        !text: tr('Hechizo')
+      TextEdit
+        id: autoHasteSpell
+        width: 180
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+
+    FieldRow
+      FieldLabel
+        !text: tr('Intervalo (ms)')
+      SpinBox
+        id: autoHasteInterval
+        width: 70
+        minimum: 1000
+        maximum: 30000
+        step: 500
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+
+    SectionLabel
+      !text: tr('Cure')
+
+    FieldRow
+      FieldLabel
+        !text: tr('Hechizo cure')
+      TextEdit
+        id: cureSpell
+        width: 180
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+
+    SectionLabel
+      !text: tr('Hotkeys (click Set y presiona la tecla, Esc cancela)')
+
+    FieldRow
+      HotkeyName
+        !text: tr('Heal Now')
+      HotkeyCurrent
+        id: hkHealNowCurrent
+        text: '-'
+      HotkeySetButton
+        @onClick: startCapture('healNow')
+      HotkeyClearButton
+        @onClick: clearHotkey('healNow')
+
+    FieldRow
+      HotkeyName
+        !text: tr('Emergency Heal Now')
+      HotkeyCurrent
+        id: hkEmergencyHealNowCurrent
+        text: '-'
+      HotkeySetButton
+        @onClick: startCapture('emergencyHealNow')
+      HotkeyClearButton
+        @onClick: clearHotkey('emergencyHealNow')
+
+    FieldRow
+      HotkeyName
+        !text: tr('Haste Now')
+      HotkeyCurrent
+        id: hkHasteNowCurrent
+        text: '-'
+      HotkeySetButton
+        @onClick: startCapture('hasteNow')
+      HotkeyClearButton
+        @onClick: clearHotkey('hasteNow')
+
+    FieldRow
+      HotkeyName
+        !text: tr('Cure Now')
+      HotkeyCurrent
+        id: hkCureNowCurrent
+        text: '-'
+      HotkeySetButton
+        @onClick: startCapture('cureNow')
+      HotkeyClearButton
+        @onClick: clearHotkey('cureNow')
+
+    FieldRow
+      HotkeyName
+        !text: tr('Toggle Auto Heal')
+      HotkeyCurrent
+        id: hkToggleAutoHealCurrent
+        text: '-'
+      HotkeySetButton
+        @onClick: startCapture('toggleAutoHeal')
+      HotkeyClearButton
+        @onClick: clearHotkey('toggleAutoHeal')
+
+    FieldRow
+      HotkeyName
+        !text: tr('Toggle Auto Haste')
+      HotkeyCurrent
+        id: hkToggleAutoHasteCurrent
+        text: '-'
+      HotkeySetButton
+        @onClick: startCapture('toggleAutoHaste')
+      HotkeyClearButton
+        @onClick: clearHotkey('toggleAutoHaste')
+
+  VerticalScrollBar
+    id: contentScrollBar
+    anchors.top: contentPanel.top
+    anchors.bottom: contentPanel.bottom
+    anchors.right: parent.right
+    step: 24
+    pixels-scroll: true
+
+  Button
+    id: saveButton
+    !text: tr('Guardar')
+    width: 100
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+
+  Button
+    id: resetSpellsButton
+    !text: tr('Reset hechizos a defaults')
+    width: 180
+    anchors.left: prev.right
+    anchors.bottom: parent.bottom
+    margin-left: 8
+
+  Label
+    !text: tr('Caster Toolkit - eduardogallifaochoa')
+    font: verdana-11px-monochrome
+    color: #666666
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom

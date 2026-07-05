@@ -1,0 +1,14 @@
+Module
+  name: caster_toolkit
+  description: Auto Heal / Emergency Heal / Auto Haste / quick-cast hotkeys toolkit para Druid y Sorcerer
+  author: eduardogallifaochoa
+  website: https://github.com/eduardogallifaochoa/otcv8-eddiexo-scripts
+
+  autoload: true
+  autoload-priority: 3000
+  sandboxed: true
+  dependencies: [ modulelib, game_interface, client_topmenu ]
+  scripts: [ caster_toolkit ]
+
+  @onLoad: init()
+  @onUnload: terminate()
